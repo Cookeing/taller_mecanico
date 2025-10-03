@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Clientes</h2>
+    <a href="{% url 'clientes:create' %}" class="btn btn-primary">Nuevo cliente</a>
+  </div>
+
+  <!-- Search input -->
+  <div class="mb-3">
+    <input id="search-input" type="search" class="form-control" placeholder="Buscar clientes por nombre..." value="{{ query|default:'' }}" aria-label="Buscar clientes">
+  </div>
+
+  <div id="search-feedback" class="mb-2" style="display:none;">
+    Resultados para: <strong id="search-query"></strong>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>RUT</th>
+          <th>Teléfono</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="results-body">
+        {% for cliente in clientes %}
+        <tr>
+          <td>{{ cliente.nombre }}</td>
+          <td>{{ cliente.rut }}</td>
+          <td>{{ cliente.telefono }}</td>
+          <td>
+            <a href="{% url 'clientes:update' cliente.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+            <a href="{% url 'clientes:delete' cliente.pk %}" class="btn btn-sm btn-outline-danger">Borrar</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">No hay clientes registrados.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{# Inline JS para live-search (puedes moverlo a static/js/cliente_search.js si prefieres) #}
+<script>
+(function(){
+  const input = document.getElementById('search-input');
+  const resultsBody = document.getElementById('results-body');
+  const feedback = document.getElementById('search-feedback');
+  const querySpan = document.getElementById('search-query');
+  const apiUrl = "{% url 'clientes:api_buscar' %}";
+
+  function escapeHtml(str){
+    if(!str) return '';
+    return String(str).replace(/[&<>'"]/g, function(m){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;',"\'":'&#39;','"':'&quot;'}[m];
+    });
+  }
+
+  function renderRows(items){
+    if(!items || items.length === 0){
+      resultsBody.innerHTML = '<tr><td colspan="4">No se encontraron clientes.</td></tr>';
+      return;
+    }
+    let html = '';
+    for(const c of items){
+      html += `<tr>
+        <td>${escapeHtml(c.nombre)}</td>
+        <td>${escapeHtml(c.rut)}</td>
+        <td>${escapeHtml(c.telefono || '')}</td>
+        <td>
+          <a href="/clientes/${c.id}/editar/" class="btn btn-sm btn-outline-secondary">Editar</a>
+          <a href="/clientes/${c.id}/borrar/" class="btn btn-sm btn-outline-danger">Borrar</a>
+        </td>
+      </tr>`;
+    }
+    resultsBody.innerHTML = html;
+  }
+
+  // debounce helper
+  function debounce(fn, delay){
+    let t;
+    return function(...args){
+      clearTimeout(t);
+      t = setTimeout(()=>fn.apply(this,args), delay);
+    };
+  }
+
+  async function doSearch(q){
+    if(!q || q.trim().length === 0){
+      // si el campo queda vacío, recargar lista server-side para mostrar todo
+      // fallback simple: recargar la página (mantiene server-side list)
+      window.history.replaceState({}, '', window.location.pathname);
+      location.href = window.location.pathname;
+      return;
+    }
+    try{
+      const resp = await fetch(apiUrl + '?q=' + encodeURIComponent(q));
+      if(!resp.ok) throw new Error('Error en búsqueda');
+      const data = await resp.json();
+      renderRows(data);
+      feedback.style.display = data.length ? 'block' : 'none';
+      querySpan.textContent = q;
+    }catch(err){
+      console.error(err);
+      resultsBody.innerHTML = '<tr><td colspan="4">Error al buscar. Intente de nuevo.</td></tr>';
+      feedback.style.display = 'none';
+    }
+  }
+
+  input.addEventListener('input', debounce(function(e){
+    const q = e.target.value;
+    doSearch(q);
+  }, 300));
+})();
+</script>
+
+{% endblock %}

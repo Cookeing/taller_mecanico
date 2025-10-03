@@ -1,0 +1,30 @@
+[MASTER]
+# Ignorar migraciones (se autogeneran)
+ignore=migrations
+
+# Extensiones de archivos que Pylint analizará
+extension-pkg-whitelist=
+
+# Número máximo de argumentos permitidos en funciones (aumentamos porque Django usa varios)
+max-args=10
+
+[MESSAGES CONTROL]
+# Desactivar reglas molestas en Django
+disable=
+    C0114,  # missing-module-docstring
+    C0115,  # missing-class-docstring
+    C0116,  # missing-function-docstring
+    E1101,  # no-member (falso positivo con Cliente.objects, QuerySets, etc.)
+    W0613,  # unused-argument (Django views usan 'request' aunque a veces no se use)
+
+[FORMAT]
+# Máximo de caracteres por línea
+max-line-length=100
+
+[DESIGN]
+# Número máximo de atributos permitidos en una clase
+max-attributes=12
+
+[TYPECHECK]
+# Ignorar errores de Pylint en atributos dinámicos de Django
+generated-members=objects,DoesNotExist,MultipleObjectsReturned
