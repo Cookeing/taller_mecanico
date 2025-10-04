@@ -9,4 +9,6 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("clientes/", include("clientes.urls")),
     path("", lambda request: redirect("clientes:list")),  # 👈 redirige al listado de clientes
+    path("vehiculos/", include("vehiculo.urls")),
+
 ]

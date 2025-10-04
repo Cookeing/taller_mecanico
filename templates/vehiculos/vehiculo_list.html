@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Vehículos</h2>
+    <a href="{% url 'vehiculos:create' %}" class="btn btn-primary">Nuevo vehículo</a>
+  </div>
+
+  <!-- Barra de búsqueda de clientes -->
+  <div class="mb-3">
+    <input id="search-client-input" type="search" class="form-control" placeholder="Buscar clientes por nombre o RUT...">
+  </div>
+
+  <!-- Barra de búsqueda de vehículos -->
+  <div class="mb-3">
+    <input id="search-vehiculo-input" type="search" class="form-control" placeholder="Buscar vehículos por patente...">
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Patente</th>
+          <th>Marca</th>
+          <th>Modelo</th>
+          <th>Cliente</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="results-body">
+        {% for v in vehiculos %}
+        <tr>
+          <td>{{ v.patente }}</td>
+          <td>{{ v.marca|default:"-" }}</td>
+          <td>{{ v.modelo|default:"-" }}</td>
+          <td>{{ v.cliente.nombre }}</td>
+          <td>
+            <a href="{% url 'vehiculos:detail' v.pk %}" class="btn btn-sm btn-outline-primary">Ver</a>
+            <a href="{% url 'vehiculos:edit' v.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No hay vehículos registrados.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+(function(){
+  const clientInput = document.getElementById('search-client-input');
+  const vehiculoInput = document.getElementById('search-vehiculo-input');
+  const resultsBody = document.getElementById('results-body');
+
+  const apiClientes = "{% url 'clientes:api_buscar' %}";
+  const apiVehiculos = "{% url 'vehiculos:api_buscar' %}";
+
+  function escapeHtml(str){
+    if(!str) return '';
+    return String(str).replace(/[&<>'"]/g, function(m){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;',"\'":'&#39;','"':'&quot;'}[m];
+    });
+  }
+
+  function renderVehiculos(items){
+    if(!items || items.length === 0){
+      resultsBody.innerHTML = '<tr><td colspan="5">No se encontraron vehículos.</td></tr>';
+      return;
+    }
+    let html = '';
+    for(const v of items){
+      html += `<tr>
+        <td>${escapeHtml(v.patente)}</td>
+        <td>${escapeHtml(v.marca)}</td>
+        <td>${escapeHtml(v.modelo)}</td>
+        <td>${escapeHtml(v.cliente || '')}</td>
+        <td>
+          <a href="/vehiculos/${v.id}/" class="btn btn-sm btn-outline-primary">Ver</a>
+          <a href="/vehiculos/${v.id}/editar/" class="btn btn-sm btn-outline-secondary">Editar</a>
+        </td>
+      </tr>`;
+    }
+    resultsBody.innerHTML = html;
+  }
+
+  function debounce(fn, delay){
+    let t; return function(...args){ clearTimeout(t); t = setTimeout(()=>fn.apply(this,args), delay); };
+  }
+
+  async function doSearch(apiUrl, q, renderFn){
+    if(!q || q.trim().length === 0) return;
+    try{
+      const resp = await fetch(apiUrl + '?q=' + encodeURIComponent(q));
+      if(!resp.ok) throw new Error('Error en búsqueda');
+      const data = await resp.json();
+      renderFn(data);
+    }catch(err){
+      console.error(err);
+      resultsBody.innerHTML = '<tr><td colspan="5">Error al buscar.</td></tr>';
+    }
+  }
+
+  clientInput.addEventListener('input', debounce(function(e){
+    // Usamos renderVehiculos porque la API de clientes ahora devuelve una lista de vehículos.
+    doSearch(apiClientes, e.target.value, renderVehiculos); 
+}, 300));
+
+  vehiculoInput.addEventListener('input', debounce(function(e){
+    doSearch(apiVehiculos, e.target.value, renderVehiculos);
+  }, 300));
+})();
+</script>
+
+{% endblock %}
