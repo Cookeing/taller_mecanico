@@ -1,8 +1,9 @@
-# vehiculo/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_GET
+from django.db import models
 from .models import Vehiculo
+from clientes.models import Cliente
 from .forms import VehiculoForm
 
 def vehiculo_list(request):
@@ -75,6 +76,7 @@ def buscar_vehiculos_api(request):
     if not q:
         return JsonResponse([], safe=False)
 
+    # Búsqueda más eficiente con icontains
     qs = Vehiculo.objects.filter(patente__icontains=q).select_related("cliente")[:50]
     data = []
     for v in qs:
@@ -87,3 +89,40 @@ def buscar_vehiculos_api(request):
             "cliente_rut": v.cliente.rut if v.cliente else "",
         })
     return JsonResponse(data, safe=False)
+
+def buscar_vehiculos_por_cliente_api(request):
+    """
+    Endpoint JSON para buscar vehículos por cliente (nombre o RUT).
+    Ej: /vehiculos/api/buscar-por-cliente/?q=juan
+    """
+    q = request.GET.get("q", "").strip()
+    if not q:
+        return JsonResponse([], safe=False)
+
+    try:
+        # Buscar clientes que coincidan con la query
+        clientes_coincidentes = Cliente.objects.filter(
+            models.Q(nombre__icontains=q) | models.Q(rut__icontains=q)
+        )
+        
+        # Obtener vehículos de esos clientes
+        vehiculos = Vehiculo.objects.filter(
+            cliente__in=clientes_coincidentes
+        ).select_related("cliente")[:50]
+        
+        data = []
+        for v in vehiculos:
+            data.append({
+                "id": v.id,
+                "patente": v.patente,
+                "marca": v.marca or "",
+                "modelo": v.modelo or "",
+                "cliente": v.cliente.nombre if v.cliente else "",
+                "cliente_rut": v.cliente.rut if v.cliente else "",
+            })
+        return JsonResponse(data, safe=False)
+    
+    except Exception as e:
+        # Para debugging - muestra el error en la consola
+        print(f"Error en búsqueda por cliente: {e}")
+        return JsonResponse([], safe=False)

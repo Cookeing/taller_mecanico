@@ -6,6 +6,7 @@ app_name = "vehiculos"
 urlpatterns = [
     path("", views.vehiculo_list, name="list"),
     path("api/buscar/", views.buscar_vehiculos_api, name="api_buscar"),
+    path("api/buscar-por-cliente/", views.buscar_vehiculos_por_cliente_api, name="api_buscar_por_cliente"),  # NUEVA
     path("nuevo/", views.vehiculo_create, name="create"),
     path("<int:pk>/editar/", views.vehiculo_update, name="edit"),
     path("<int:pk>/borrar/", views.vehiculo_delete, name="delete"),
