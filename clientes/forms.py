@@ -13,9 +13,17 @@ class ClienteForm(forms.ModelForm):
         widgets = {
             "nombre": forms.TextInput(attrs={"class": "form-control"}),
             "rut": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "12.345.678-5"}
+                attrs={"class": "form-control", "placeholder": "12.345.678-5", "pattern": r"[\d\s\-\+\(\)]+", "title": "Solo números, espacios, guiones, + y paréntesis"
+                }
             ),
-            "telefono": forms.TextInput(attrs={"class": "form-control"}),
+                    "telefono": forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "type": "tel",
+                "pattern": "[0-9]{8,15}",  # 
+                "title": "Solo números, mínimo 8 dígitos",
+                "placeholder": "92239994"
+            }),
             "direccion": forms.TextInput(attrs={"class": "form-control"}),
         }
 

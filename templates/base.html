@@ -13,7 +13,19 @@
   <body class="bg-light">
     <nav class="navbar navbar-dark bg-dark">
       <div class="container-fluid">
-        <a class="navbar-brand" href="/clientes/">Taller Admin</a>
+        <a class="navbar-brand" href="/">Taller Admin</a>
+        <div>
+          <a
+            href="{% url 'clientes:list' %}"
+            class="btn btn-sm btn-outline-light me-2"
+            >Clientes</a
+          >
+          <a
+            href="{% url 'vehiculos:list' %}"
+            class="btn btn-sm btn-outline-light"
+            >Vehículos</a
+          >
+        </div>
       </div>
     </nav>
     <main class="container py-4">{% block content %}{% endblock %}</main>

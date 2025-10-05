@@ -27,6 +27,20 @@ def validar_rut(value: str) -> None:
     if dv_calc != dv:
         raise ValidationError("Dígito verificador no válido.")
 
+def validar_telefono(value: str) -> None:
+
+    ### Permite fortmato de telefono internacional y local +56 y 9 dígitos
+    if not re.match(r'^[\d\s\-\+\(\)]+$', value):
+        raise ValidationError("El teléfono solo puede contener números, espacios, guiones, + y paréntesis.")
+
+    # Verifica que tenga el formato correcto
+    if not re.match(r'^(?:\+56\s9\d{8}|\(9\)\s\d{4}-\d{4}|\d{8})$', value):
+        raise ValidationError("El teléfono debe tener un formato válido.")
+
+    solo_numeros = re.sub(r'[^\d]', '', value)
+    if len(solo_numeros) < 8:
+        raise ValidationError("El teléfono debe contener al menos 8 dígitos.")
+
 
 class Cliente(models.Model):
     """Entidad Cliente del taller mecánico."""
