@@ -1,7 +1,9 @@
-{% extends "base.html" %}
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <h2 class="mb-3">Vehículo: {{ vehiculo.patente }}</h2>
-<p><strong>Cliente:</strong> {{ vehiculo.cliente.nombre }} ({{ vehiculo.cliente.rut }})</p>
+<p>
+  <strong>Cliente:</strong> {{ vehiculo.cliente.nombre }} ({{
+  vehiculo.cliente.rut }})
+</p>
 <ul>
   <li><strong>Marca:</strong> {{ vehiculo.marca|default:"-" }}</li>
   <li><strong>Modelo:</strong> {{ vehiculo.modelo|default:"-" }}</li>
@@ -12,26 +14,26 @@
 
 <h4>Historial de servicios</h4>
 {% if servicios %}
-  <ul>
+<ul>
   {% for s in servicios %}
-    <li>
-      {{ s.fecha_servicio|date:"d-m-Y" }} - {{ s.descripcion_trabajo }}
-      
-      {# Accedemos a la relación inversa 'documento_set' directamente en el servicio 's' #}
-      {% with documentos=s.documento_set.all %}
-        {% if documentos %}
-        <ul>
-          {% for d in documentos %}
-            <li>{{ d.tipo_documento }} - {{ d.fecha_documento|date:"d-m-Y" }} - {{ d.monto }}</li>
-          {% endfor %}
-        </ul>
-        {% endif %}
-      {% endwith %}
-    </li>
+  <li>
+    {{ s.fecha_servicio|date:"d-m-Y" }} - {{ s.descripcion_trabajo }} {#
+    Accedemos a la relación inversa 'documento_set' directamente en el servicio
+    's' #} {% with documentos=s.documentos.all %} {% if documentos %}
+    <ul>
+      {% for d in documentos %}
+      <li>
+        {{ d.tipo_documento }} - {{ d.fecha_documento|date:"d-m-Y" }} - {{
+        d.monto }}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %} {% endwith %}
+  </li>
   {% endfor %}
-  </ul>
+</ul>
 {% else %}
-  <p>No hay servicios registrados para este vehículo.</p>
+<p>No hay servicios registrados para este vehículo.</p>
 {% endif %}
 
 <a href="{% url 'vehiculos:list' %}" class="btn btn-secondary mt-3">Volver</a>

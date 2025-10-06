@@ -51,7 +51,7 @@ def vehiculo_detail(request, pk):
     # 2. Obtenemos todos los servicios asociados al vehículo.
     #    Hacemos un 'prefetch_related' para obtener los documentos de TODOS los servicios
     #    en una sola consulta eficiente, en lugar de una consulta por cada servicio.
-    servicios = vehiculo.servicios.all().order_by("-fecha_servicio").prefetch_related("documento_set")
+    servicios = vehiculo.servicios.all().order_by("-fecha_servicio").prefetch_related("documentos")
     
     # NOTA: Ahora, cada objeto 's' en 'servicios' ya tiene cargado su s.documento_set.all()
     #       (gracias a prefetch_related), lo que hace que la plantilla sea simple.
