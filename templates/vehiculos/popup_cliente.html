@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Cliente Creado</title>
+  </head>
+  <body>
+    <div
+      style="text-align: center; padding: 50px; font-family: Arial, sans-serif"
+    >
+      <h2 style="color: #28a745">✅ Cliente creado exitosamente</h2>
+      <p><strong>{{ cliente.nombre }}</strong></p>
+      <p>Esta ventana se cerrará automáticamente...</p>
+    </div>
+
+    <script>
+      setTimeout(function () {
+        window.close();
+      }, 1500);
+    </script>
+  </body>
+</html>

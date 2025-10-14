@@ -5,7 +5,6 @@ from .models import Cliente, normalizar_rut
 
 
 class ClienteForm(forms.ModelForm):
-    """Formulario para crear y editar clientes con validación de RUT y duplicados."""
 
     class Meta:
         model = Cliente
@@ -25,6 +24,7 @@ class ClienteForm(forms.ModelForm):
                 "placeholder": "92239994"
             }),
             "direccion": forms.TextInput(attrs={"class": "form-control"}),
+            
         }
 
     def clean(self):

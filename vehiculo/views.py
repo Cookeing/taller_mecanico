@@ -1,10 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 from django.db import models
 from .models import Vehiculo
 from clientes.models import Cliente
 from .forms import VehiculoForm
+# modulo especifico de el formulario de clientes
+from clientes.forms import ClienteForm
 
 def vehiculo_list(request):
     """Página HTML con tabla y dos barras de búsqueda (clientes/vehículos)."""
@@ -14,6 +16,7 @@ def vehiculo_list(request):
 
 
 def vehiculo_create(request):
+    """Crea un nuevo vehículo."""
     if request.method == "POST":
         form = VehiculoForm(request.POST)
         if form.is_valid():
@@ -21,8 +24,12 @@ def vehiculo_create(request):
             return redirect("vehiculos:list")
     else:
         form = VehiculoForm()
-    return render(request, "vehiculos/vehiculo_form.html", {"form": form, "accion": "Registrar"})
-
+    
+    return render(request, "vehiculos/vehiculo_form.html", {
+        "form": form,
+        "accion": "Registrar"
+    })
+    
 
 def vehiculo_update(request, pk):
     vehiculo = get_object_or_404(Vehiculo, pk=pk)
@@ -33,7 +40,9 @@ def vehiculo_update(request, pk):
             return redirect("vehiculos:list")
     else:
         form = VehiculoForm(instance=vehiculo)
-    return render(request, "vehiculos/vehiculo_form.html", {"form": form, "accion": "Editar"})
+    return render(request, "vehiculos/vehiculo_form.html", {"form": form,
+                                                            "ClienteForm": ClienteForm(), #aqui esta el formulario de cliente
+                                                            "accion": "Editar"})    
 
 
 def vehiculo_delete(request, pk):

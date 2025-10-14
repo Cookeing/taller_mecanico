@@ -18,6 +18,7 @@ class VehiculoForm(forms.ModelForm):
                     "pattern": "[A-Z]{2}[0-9]{4}|[A-Z]{4}[0-9]{2}",
                     "title": "Formato: AA1234 (antiguo) o ABCD12 (nuevo)",
                     "style": "text-transform: uppercase;",
+                    "required": True 
                 }
             ),
             "marca": forms.TextInput(attrs={"class": "form-control", "placeholder": "ej: Toyota"}),
@@ -43,28 +44,39 @@ class VehiculoForm(forms.ModelForm):
                     "maxlength": "20"
                 }
             ),
-            "cliente": forms.Select(attrs={"class": "form-control"}),
+            "cliente": forms.Select(
+                attrs={
+                    "class": "form-control",
+                    "id": "id_cliente",
+                    "required": True
+                }
+            ),
         }
     
-    def clean(self):
-        """Valida duplicados por patente y valida el cliente."""
-        cleaned = super().clean()
+    def clean_patente(self):
+        """ 
+        esta funcion se encarga de Valida que la patente no esté vacía y no esté duplicada 
+        ."""
+        patente = self.cleaned_data.get("patente")
         
-        patente = cleaned.get("patente")
-        cliente = cleaned.get("cliente")
+        if not patente or not patente.strip():
+            raise forms.ValidationError("La patente es obligatoria.")
         
-        # Validar patente
-        if patente:
-            patente = normalizar_patente(patente)
-            cleaned["patente"] = patente
-            qs = Vehiculo.objects.exclude(pk=getattr(self.instance, "pk", None)).filter(
-                patente__iexact=patente
-            )
-            if qs.exists():
-                self.add_error("patente", "Ya existe un vehículo con esa patente.")
+        patente = normalizar_patente(patente)
         
-        # Validar cliente
+        qs = Vehiculo.objects.exclude(pk=getattr(self.instance, "pk", None)).filter(
+            patente__iexact=patente
+        )
+        if qs.exists():
+            raise forms.ValidationError("Ya existe un vehículo con esa patente.")
+        
+        return patente
+    
+    def clean_cliente(self):
+        """Valida que se haya seleccionado un cliente."""
+        cliente = self.cleaned_data.get("cliente")
+        
         if not cliente:
-            self.add_error("cliente", "Debe seleccionar un cliente.")
+            raise forms.ValidationError("Debe seleccionar un cliente.")
         
-        return cleaned
+        return cliente

@@ -4,8 +4,8 @@
     <h2 class="mb-0">Vehículos</h2>
     <div>
       <a href="{% url 'vehiculos:create' %}" class="btn btn-primary">
-        Nuevo Vehículo</a
-      >
+        Nuevo Vehículo
+      </a>
     </div>
   </div>
 
@@ -16,16 +16,7 @@
       type="search"
       class="form-control"
       placeholder="Buscar vehículos por nombre o RUT del cliente..."
-    />
-  </div>
-
-  <!-- Barra de búsqueda de vehículos -->
-  <div class="mb-3">
-    <input
-      id="search-vehiculo-input"
-      type="search"
-      class="form-control"
-      placeholder="Buscar vehículos por patente..."
+      aria-label="Buscar por cliente"
     />
   </div>
 
@@ -72,167 +63,24 @@
   </div>
 </div>
 
+{# Cargar módulos JavaScript externos #} {% load static %}
+<script src="{% static 'js/search_base.js' %}"></script>
+<script src="{% static 'js/vehiculo_search.js' %}"></script>
 <script>
-  (function () {
-    const clientInput = document.getElementById("search-client-input");
-    const vehiculoInput = document.getElementById("search-vehiculo-input");
-    const resultsBody = document.getElementById("results-body");
-
-    const apiVehiculosPorCliente =
-      "{% url 'vehiculos:api_buscar_por_cliente' %}";
-    const apiVehiculosPorPatente = "{% url 'vehiculos:api_buscar' %}";
-
-    // Datos originales para restaurar cuando no hay búsqueda
-    let originalData = null;
-    let lastClientSearch = "";
-    let lastPatenteSearch = "";
-
-    function escapeHtml(str) {
-      if (!str) return "";
-      return String(str).replace(/[&<>'"]/g, function (m) {
-        return {
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          "'": "&#39;",
-          '"': "&quot;",
-        }[m];
-      });
-    }
-
-    function renderVehiculos(items) {
-      if (!items || items.length === 0) {
-        resultsBody.innerHTML =
-          '<tr><td colspan="6">No se encontraron vehículos.</td></tr>';
-        return;
-      }
-      let html = "";
-      for (const v of items) {
-        html += `<tr>
-                <td>${escapeHtml(v.patente)}</td>
-                <td>${escapeHtml(v.marca)}</td>
-                <td>${escapeHtml(v.modelo)}</td>
-                <td>${escapeHtml(v.cliente || "")}</td>
-                <td>${escapeHtml(v.cliente_rut || "")}</td>
-                <td>
-                    <a href="/vehiculos/${
-                      v.id
-                    }/" class="btn btn-sm btn-outline-primary">Ver</a>
-                    <a href="/vehiculos/${
-                      v.id
-                    }/editar/" class="btn btn-sm btn-outline-secondary">Editar</a>
-                </td>
-            </tr>`;
-      }
-      resultsBody.innerHTML = html;
-    }
-
-    function debounce(fn, delay) {
-      let t;
-      return function (...args) {
-        clearTimeout(t);
-        t = setTimeout(() => fn.apply(this, args), delay);
-      };
-    }
-
-    async function realizarBusquedaCombinada() {
-      const clienteQuery = clientInput.value.trim();
-      const patenteQuery = vehiculoInput.value.trim();
-
-      // Si ambos campos están vacíos, restaurar datos originales
-      if (!clienteQuery && !patenteQuery) {
-        if (originalData) {
-          renderVehiculos(originalData);
-        } else {
-          window.location.href = "{% url 'vehiculos:list' %}";
-        }
-        return;
-      }
-
-      try {
-        let resultados = [];
-
-        // Si hay búsqueda por cliente, obtener esos vehículos primero
-        if (clienteQuery) {
-          console.log(`🔍 Buscando cliente: "${clienteQuery}"`);
-          const respCliente = await fetch(
-            apiVehiculosPorCliente + "?q=" + encodeURIComponent(clienteQuery)
-          );
-          if (!respCliente.ok)
-            throw new Error(
-              `Error en búsqueda por cliente: ${respCliente.status}`
-            );
-          const dataCliente = await respCliente.json();
-          resultados = dataCliente;
-          console.log(`📋 Vehículos por cliente:`, dataCliente);
-        }
-
-        // Si hay búsqueda por patente, filtrar los resultados existentes o hacer nueva búsqueda
-        if (patenteQuery) {
-          console.log(`🔍 Buscando patente: "${patenteQuery}"`);
-
-          if (resultados.length > 0) {
-            // Filtrar los resultados de cliente por patente
-            resultados = resultados.filter((v) =>
-              v.patente.toLowerCase().includes(patenteQuery.toLowerCase())
-            );
-            console.log(`🎯 Resultados combinados (filtrados):`, resultados);
-          } else {
-            // Si no hay resultados previos, buscar solo por patente
-            const respPatente = await fetch(
-              apiVehiculosPorPatente + "?q=" + encodeURIComponent(patenteQuery)
-            );
-            if (!respPatente.ok)
-              throw new Error(
-                `Error en búsqueda por patente: ${respPatente.status}`
-              );
-            const dataPatente = await respPatente.json();
-            resultados = dataPatente;
-            console.log(`🚗 Vehículos por patente:`, dataPatente);
-          }
-        }
-
-        renderVehiculos(resultados);
-      } catch (err) {
-        console.error("❌ Error en búsqueda combinada:", err);
-        resultsBody.innerHTML = `<tr><td colspan="6">Error al buscar. Ver consola para detalles.</td></tr>`;
-      }
-    }
-
-    // Guardar datos originales al cargar la página
-    document.addEventListener("DOMContentLoaded", function () {
-      const originalRows = document.querySelectorAll("#results-body tr");
-      if (
-        originalRows.length > 0 &&
-        !originalRows[0].innerHTML.includes("No hay")
-      ) {
-        originalData = Array.from(originalRows).map((row) => {
-          const cells = row.querySelectorAll("td");
-          return {
-            patente: cells[0].textContent,
-            marca: cells[1].textContent,
-            modelo: cells[2].textContent,
-            cliente: cells[3].textContent,
-            cliente_rut: cells[4].textContent,
-          };
-        });
-      }
+  // Inicializar la búsqueda de vehículos cuando el DOM esté listo
+  document.addEventListener("DOMContentLoaded", function () {
+    new VehiculoSearch({
+      clientInputId: "search-client-input",
+      vehiculoInputId: "search-vehiculo-input",
+      resultsBodyId: "results-body",
+      apiVehiculosPorCliente: "{% url 'vehiculos:api_buscar_por_cliente' %}",
+      apiVehiculosPorPatente: "{% url 'vehiculos:api_buscar' %}",
+      debounceDelay: 300,
+      detailUrlPattern: "/vehiculos/{id}/",
+      editUrlPattern: "/vehiculos/{id}/editar/",
+      listUrl: "{% url 'vehiculos:list' %}",
     });
-
-    // Event listeners para búsquedas - ahora ambos llaman a la misma función
-    clientInput.addEventListener(
-      "input",
-      debounce(function (e) {
-        realizarBusquedaCombinada();
-      }, 300)
-    );
-
-    vehiculoInput.addEventListener(
-      "input",
-      debounce(function (e) {
-        realizarBusquedaCombinada();
-      }, 300)
-    );
-  })();
+  });
 </script>
+
 {% endblock %}
