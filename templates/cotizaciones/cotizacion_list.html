@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Historial de cotizaciones
+{% endblock title %}
+
+{% block content %}
+  <h2>Historial de Cotizaciones</h2>
+
+  <form method="get">
+    <label for="cliente">Buscar por cliente:</label>
+    <input type="text" id="cliente" name="cliente" placeholder="Nombre del cliente" value="{{ request.GET.cliente }}">
+
+    <label for="patente">Buscar por vehículo:</label>
+    <input type="text" id="patente" name="patente" placeholder="Patente del vehículo" value="{{ request.GET.patente }}">
+
+    <button type="submit">Filtrar</button>
+  </form>
+
+  <table border="1" cellspacing="0" cellpadding="6">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Cliente</th>
+        <th>Vehículo</th>
+        <th>Fecha</th>
+        <th>Descripción</th>
+        <th>Monto total</th>
+        <th>Estado</th>
+        <th>Canal envío</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cot in cotizaciones %}
+      <tr>
+        <td>{{ cot.numero_cotizacion }}</td>
+        <td>{{ cot.cliente.nombre }}</td>
+        <td>{{ cot.vehiculo.patente }}</td>
+        <td>{{ cot.fecha_creacion|date:"Y-m-d H:i" }}</td>
+        <td>{{ cot.descripcion }}</td>
+        <td>${{ cot.monto_total }}</td>
+        <td>{{ cot.estado_cotizacion }}</td>
+        <td>—</td>
+        <td>
+          <a href="#">Ver PDF</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="9">No hay cotizaciones registradas.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock content %}
+{% block js %}
+{% endblock js %}

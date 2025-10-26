@@ -31,7 +31,7 @@ class ClienteSearch {
   async buscar(query) {
     const q = query.trim();
 
-    // Si está vacío, recargar página
+    // Si está vacío, va a recargar página
     if (!q) {
       window.history.replaceState({}, "", window.location.pathname);
       return (location.href = window.location.pathname);
@@ -44,7 +44,7 @@ class ClienteSearch {
 
       this.render(data);
 
-      // Mostrar feedback
+      // Mostrar feedback o resultado de la transaccion
       if (this.feedback && this.querySpan) {
         this.feedback.style.display = data.length ? "block" : "none";
         this.querySpan.textContent = q;

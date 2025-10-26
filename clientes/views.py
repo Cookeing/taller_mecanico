@@ -15,6 +15,7 @@ def cliente_list(request):
     Muestra la lista de clientes ordenados por nombre.
     Si se pasa el parámetro GET 'q', devuelve la lista filtrada (case-insensitive).
     Esta vista se usa como la página principal de clientes y soporta búsqueda server-side.
+
     """
     q = request.GET.get('q', '').strip()
     if q:
@@ -66,6 +67,7 @@ def buscar_clientes_api(request):
     Ejemplo: GET /clientes/api/buscar/?q=juan
     """
     q = request.GET.get('q', '').strip()
+    
     if not q:
         # Retornar lista vacía para evitar exponer todo el catálogo en cada pulsación
         return JsonResponse([], safe=False)

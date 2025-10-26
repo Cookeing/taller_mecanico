@@ -63,9 +63,11 @@
   </div>
 </div>
 
-{# Cargar módulos JavaScript externos #} {% load static %}
+{# Cargar módulos JavaScript externos para la búsqueda de vehículos  #} 
+{% load static %}
 <script src="{% static 'js/search_base.js' %}"></script>
 <script src="{% static 'js/vehiculo_search.js' %}"></script>
+
 <script>
   // Inicializar la búsqueda de vehículos cuando el DOM esté listo
   document.addEventListener("DOMContentLoaded", function () {

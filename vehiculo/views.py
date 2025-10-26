@@ -8,6 +8,7 @@ from .forms import VehiculoForm
 # modulo especifico de el formulario de clientes
 from clientes.forms import ClienteForm
 
+
 def vehiculo_list(request):
     """Página HTML con tabla y dos barras de búsqueda (clientes/vehículos)."""
     # mostramos todos por defecto (la búsqueda dinámica se hace vía JS -> API)
@@ -29,7 +30,7 @@ def vehiculo_create(request):
         "form": form,
         "accion": "Registrar"
     })
-    
+    4
 
 def vehiculo_update(request, pk):
     vehiculo = get_object_or_404(Vehiculo, pk=pk)

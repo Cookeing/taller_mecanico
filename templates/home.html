@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+
+
+{% block content %}
+
+<h1>Bienvenido al Taller Mecánico</h1>
+
+<div class="container" style="max-width: 800px; margin-top: 80px;">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold">Taller Mecánico</h1>
+        <p class="text-secondary">Sistema de Cotizaciones</p>
+    </div>
+
+    <div class="d-grid gap-3">
+        <a href="{% url 'registrar_cotizacion' %}" class="btn btn-primary btn-lg py-3">
+            Nueva Cotización
+        </a>
+        <a href="{% url 'historial_cotizaciones' %}" class="btn btn-outline-primary btn-lg py-3">
+            Historial de Cotizaciones
+        </a>
+    </div>
+</div>
+
+{% endblock %}  

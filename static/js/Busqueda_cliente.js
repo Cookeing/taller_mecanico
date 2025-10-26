@@ -2,6 +2,7 @@
  * Cliente Search Module
  * Módulo reutilizable para búsqueda en vivo de clientes
  * Usa SearchUtils para funcionalidades compartidas
+ * 
  */
 
 class ClienteSearch {
@@ -151,7 +152,7 @@ class ClienteSearch {
   }
 
   /**
-   * Método público para destruir la instancia
+   * Método público para destruir la instancia espesifica
    */
   destroy() {
     if (this.input) {
