@@ -107,7 +107,16 @@ class Servicio(models.Model):
         default='PENDIENTE'
     )
     
+    # Campos de costos
+    mano_obra = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    repuestos = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0, editable=False)
+    
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        self.total = (self.mano_obra or 0) + (self.repuestos or 0)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Servicio ID {self.pk} a {self.vehiculo.patente}"

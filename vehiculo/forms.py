@@ -1,7 +1,7 @@
 """Formularios de la aplicación Vehículos."""
 
 from django import forms
-from .models import Vehiculo, normalizar_patente
+from .models import Vehiculo, Servicio, normalizar_patente
 
 
 class VehiculoForm(forms.ModelForm):
@@ -80,3 +80,18 @@ class VehiculoForm(forms.ModelForm):
             raise forms.ValidationError("Debe seleccionar un cliente.")
         
         return cliente
+
+
+class ServicioForm(forms.ModelForm):
+    class Meta:
+        model = Servicio
+        fields = [
+            'vehiculo',
+            'fecha_servicio',
+            'descripcion_trabajo',
+            'diagnostico',
+            'observaciones',
+            'estado_servicio',
+            'mano_obra',
+            'repuestos'
+        ]

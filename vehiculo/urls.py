@@ -11,4 +11,8 @@ urlpatterns = [
     path("<int:pk>/editar/", views.vehiculo_update, name="edit"),
     path("<int:pk>/borrar/", views.vehiculo_delete, name="delete"),
     path("<int:pk>/", views.vehiculo_detail, name="detail"),
+    path('servicios/', views.servicio_list, name='servicio_list'),
+    path('servicios/nuevo/', views.servicio_create, name='servicio_create'),
+    path('servicios/<int:pk>/editar/', views.servicio_update, name='servicio_update'),
+
 ]
