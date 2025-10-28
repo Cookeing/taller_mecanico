@@ -1,8 +1,6 @@
 /**
  * Cliente Search Module
- * Módulo reutilizable para búsqueda en vivo de clientes
- * Usa SearchUtils para funcionalidades compartidas
- * 
+ * Módulo standalone para búsqueda en vivo de clientes
  */
 
 class ClienteSearch {
@@ -23,15 +21,8 @@ class ClienteSearch {
     this.apiUrl = options.apiUrl;
     this.debounceDelay = options.debounceDelay || 300;
     this.editUrlPattern = options.editUrlPattern || "/clientes/{id}/editar/";
-    this.deleteUrlPattern =
-      options.deleteUrlPattern || "/clientes/{id}/borrar/";
+    this.deleteUrlPattern = options.deleteUrlPattern || "/clientes/{id}/borrar/";
     this.colspan = options.colspan || 4;
-
-    // Usar utilidades compartidas si están disponibles
-    this.utils =
-      typeof SearchUtils !== "undefined"
-        ? SearchUtils
-        : this.createFallbackUtils();
 
     if (!this.apiUrl) {
       console.error("ClienteSearch: apiUrl es requerido");
@@ -41,54 +32,56 @@ class ClienteSearch {
     this.init();
   }
 
-  /**
-   * Crea utilidades fallback si SearchUtils no está disponible
-   */
-  createFallbackUtils() {
-    return {
-      escapeHtml: (str) => {
-        if (!str) return "";
-        return String(str).replace(/[&<>'"]/g, (m) => {
-          return {
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            "'": "&#39;",
-            '"': "&quot;",
-          }[m];
-        });
-      },
-      debounce: (fn, delay) => {
-        let timer;
-        return function (...args) {
-          clearTimeout(timer);
-          timer = setTimeout(() => fn.apply(this, args), delay);
-        };
-      },
-      fetchJson: async (url, params = {}) => {
-        const queryString = new URLSearchParams(params).toString();
-        const fullUrl = queryString ? `${url}?${queryString}` : url;
-        const response = await fetch(fullUrl);
-        if (!response.ok)
-          throw new Error(`HTTP error! status: ${response.status}`);
-        return await response.json();
-      },
-    };
-  }
-
   init() {
     if (!this.input) {
       console.error("ClienteSearch: No se encontró el input de búsqueda");
       return;
     }
 
-    // Vincular evento con debounce
-    this.input.addEventListener(
-      "input",
-      this.utils.debounce((e) => {
-        this.doSearch(e.target.value);
-      }, this.debounceDelay)
-    );
+    // Vincular evento con debounce - usando arrow function y bind
+    const debouncedSearch = this.debounce((value) => {
+      this.doSearch(value);
+    }, this.debounceDelay);
+
+    this.input.addEventListener("input", (e) => {
+      debouncedSearch(e.target.value);
+    });
+  }
+
+  /**
+   * Debounce utility
+   */
+  debounce(fn, delay) {
+    let timer;
+    return function (...args) {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn(...args), delay);
+    };
+  }
+
+  /**
+   * Escape HTML utility
+   */
+  escapeHtml(str) {
+    if (!str) return "";
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  /**
+   * Fetch JSON utility
+   */
+  async fetchJson(url, params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+    const response = await fetch(fullUrl);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
   }
 
   /**
@@ -106,9 +99,9 @@ class ClienteSearch {
       const deleteUrl = this.deleteUrlPattern.replace("{id}", c.id);
 
       html += `<tr>
-        <td>${this.utils.escapeHtml(c.nombre)}</td>
-        <td>${this.utils.escapeHtml(c.rut)}</td>
-        <td>${this.utils.escapeHtml(c.telefono || "")}</td>
+        <td>${this.escapeHtml(c.nombre)}</td>
+        <td>${this.escapeHtml(c.rut)}</td>
+        <td>${this.escapeHtml(c.telefono || "")}</td>
         <td>
           <a href="${editUrl}" class="btn btn-sm btn-outline-secondary">Editar</a>
           <a href="${deleteUrl}" class="btn btn-sm btn-outline-danger">Borrar</a>
@@ -132,7 +125,7 @@ class ClienteSearch {
     }
 
     try {
-      const data = await this.utils.fetchJson(this.apiUrl, { q });
+      const data = await this.fetchJson(this.apiUrl, { q });
 
       // Renderizar resultados
       this.renderRows(data);
@@ -152,7 +145,7 @@ class ClienteSearch {
   }
 
   /**
-   * Método público para destruir la instancia espesifica
+   * Método público para destruir la instancia
    */
   destroy() {
     if (this.input) {

@@ -1,4 +1,5 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %} 
+{% block content %}
 <div class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Vehículos</h2>
@@ -9,7 +10,7 @@
     </div>
   </div>
 
-  <!-- Barra de búsqueda de clientes -->
+  <!-- Barra de búsqueda por cliente -->
   <div class="mb-3">
     <input
       id="search-client-input"
@@ -17,6 +18,17 @@
       class="form-control"
       placeholder="Buscar vehículos por nombre o RUT del cliente..."
       aria-label="Buscar por cliente"
+    />
+  </div>
+
+  <!-- Barra de búsqueda por patente -->
+  <div class="mb-3">
+    <input
+      id="search-vehiculo-input"
+      type="search"
+      class="form-control"
+      placeholder="Buscar vehículos por patente..."
+      aria-label="Buscar por patente"
     />
   </div>
 
@@ -40,18 +52,11 @@
           <td>{{ v.modelo|default:"-" }}</td>
           <td>{{ v.cliente.nombre }}</td>
           <td>{{ v.cliente.rut }}</td>
-          <td>
-            <a
-              href="{% url 'vehiculos:detail' v.pk %}"
-              class="btn btn-sm btn-outline-primary"
-              >Ver</a
-            >
-            <a
-              href="{% url 'vehiculos:edit' v.pk %}"
-              class="btn btn-sm btn-outline-secondary"
-              >Editar</a
-            >
-          </td>
+            
+<td>
+  <a href="{% url 'vehiculos:detail' v.pk %}" class="btn btn-sm btn-outline-primary">Ver</a>
+  <a href="{% url 'vehiculos:edit' v.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+</td>
         </tr>
         {% empty %}
         <tr>
@@ -63,13 +68,10 @@
   </div>
 </div>
 
-{# Cargar módulos JavaScript externos para la búsqueda de vehículos  #} 
+{# Cargar módulo de búsqueda de vehículos #}
 {% load static %}
-<script src="{% static 'js/search_base.js' %}"></script>
-<script src="{% static 'js/vehiculo_search.js' %}"></script>
-
+<script src="{% static 'js/Busqueda_Vehiculo.js' %}"></script>
 <script>
-  // Inicializar la búsqueda de vehículos cuando el DOM esté listo
   document.addEventListener("DOMContentLoaded", function () {
     new VehiculoSearch({
       clientInputId: "search-client-input",
@@ -80,9 +82,8 @@
       debounceDelay: 300,
       detailUrlPattern: "/vehiculos/{id}/",
       editUrlPattern: "/vehiculos/{id}/editar/",
-      listUrl: "{% url 'vehiculos:list' %}",
+      listUrl: "{% url 'vehiculos:list' %}"
     });
   });
 </script>
-
 {% endblock %}

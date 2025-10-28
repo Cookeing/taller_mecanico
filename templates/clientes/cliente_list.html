@@ -61,12 +61,10 @@
     </table>
   </div>
 </div>
-
-{# Cargar módulos JavaScript externos #} {% load static %}
-<script src="{% static 'js/search_base.js' %}"></script>
-<script src="{% static 'js/cliente_search.js' %}"></script>
+{# Cargar solo el módulo de búsqueda de clientes #}
+{% load static %}
+<script src="{% static 'js/Busqueda_cliente.js' %}"></script>
 <script>
-  // Inicializar la búsqueda cuando el DOM esté listo
   document.addEventListener("DOMContentLoaded", function () {
     new ClienteSearch({
       apiUrl: "{% url 'clientes:api_buscar' %}",
@@ -80,5 +78,4 @@
     });
   });
 </script>
-
 {% endblock %}
