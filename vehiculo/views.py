@@ -3,6 +3,8 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 from django.db import models
 from .models import Vehiculo
+from .models import Servicio
+from .forms import ServicioForm
 from clientes.models import Cliente
 from .forms import VehiculoForm
 # modulo especifico de el formulario de clientes
@@ -136,3 +138,30 @@ def buscar_vehiculos_por_cliente_api(request):
         # Para debugging - muestra el error en la consola
         print(f"Error en búsqueda por cliente: {e}")
         return JsonResponse([], safe=False)
+    
+def servicio_list(request):
+    servicios = Servicio.objects.select_related('vehiculo', 'vehiculo__cliente').order_by('-fecha_creacion')
+    return render(request, 'vehiculos/servicio_list.html', {'servicios': servicios})
+
+
+def servicio_create(request):
+    if request.method == 'POST':
+        form = ServicioForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('vehiculos:servicio_list')
+    else:
+        form = ServicioForm()
+    return render(request, 'vehiculos/servicio_form.html', {'form': form, 'accion': 'Registrar'})
+
+
+def servicio_update(request, pk):
+    servicio = get_object_or_404(Servicio, pk=pk)
+    if request.method == 'POST':
+        form = ServicioForm(request.POST, instance=servicio)
+        if form.is_valid():
+            form.save()
+            return redirect('vehiculos:servicio_list')
+    else:
+        form = ServicioForm(instance=servicio)
+    return render(request, 'vehiculos/servicio_form.html', {'form': form, 'accion': 'Editar'})
