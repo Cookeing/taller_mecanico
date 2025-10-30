@@ -110,6 +110,12 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Formato de fecha chileno: día-mes-año (ej: 31-12-2025)
+# DATE_FORMAT es usado por el filtro |date en plantillas cuando no se usa localización.
+DATE_FORMAT = 'd-m-Y'
+# Formatos que acepta Django al parsear fechas en formularios (dd-mm-YYYY)
+DATE_INPUT_FORMATS = ['%d-%m-%Y', '%d-%m-%y']
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/

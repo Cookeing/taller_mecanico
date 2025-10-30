@@ -83,6 +83,24 @@ class VehiculoForm(forms.ModelForm):
 
 
 class ServicioForm(forms.ModelForm):
+    # Aceptar y mostrar fechas en formato chileno dd-mm-YYYY
+    fecha_servicio = forms.DateField(
+        input_formats=['%d-%m-%Y', '%d-%m-%y'],
+        widget=forms.DateInput(format='%d-%m-%Y', attrs={
+            'class': 'form-control',
+            'placeholder': 'Seleccione una fecha',
+            'readonly': 'readonly'
+        })
+    )
+    
+    vehiculo = forms.ModelChoiceField(
+        queryset=Vehiculo.objects.all(),
+        empty_label="Seleccione un vehículo",
+        widget=forms.Select(attrs={'class': 'form-control',
+                                   'placeholder': 'Seleccione un vehículo'}
+    ))
+    
+    
     class Meta:
         model = Servicio
         fields = [
@@ -95,3 +113,19 @@ class ServicioForm(forms.ModelForm):
             'mano_obra',
             'repuestos'
         ]
+        
+        widgets = {
+            'vehiculo': forms.Select(attrs={'class': 'form-control',
+                                            'placeholder': 'Seleccione un vehículo'}),
+            'fecha_servicio': forms.DateInput(format='%d-%m-%Y', attrs={
+                'class': 'form-control',
+                'placeholder': 'Seleccione una fecha',
+                'readonly': 'readonly'
+            }),
+            'descripcion_trabajo': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'diagnostico': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'observaciones': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'estado_servicio': forms.Select(attrs={'class': 'form-control'}),
+            'mano_obra': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'repuestos': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        }
