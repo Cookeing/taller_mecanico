@@ -1,7 +1,5 @@
 {% extends "base.html" %}
 
-
-
 {% block content %}
 
 <h1>Bienvenido al Taller Mecánico</h1>
@@ -13,13 +11,13 @@
     </div>
 
     <div class="d-grid gap-3">
-        <a href="{% url 'registrar_cotizacion' %}" class="btn btn-primary btn-lg py-3">
+        <a href="{% url 'cotizaciones:registrar_cotizacion' %}" class="btn btn-primary btn-lg py-3">
             Nueva Cotización
         </a>
-        <a href="{% url 'historial_cotizaciones' %}" class="btn btn-outline-primary btn-lg py-3">
+        <a href="{% url 'cotizaciones:listar_cotizaciones' %}" class="btn btn-outline-primary btn-lg py-3">
             Historial de Cotizaciones
         </a>
     </div>
 </div>
 
-{% endblock %}  
+{% endblock %}

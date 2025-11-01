@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Cotizaciones del Servicio
+{% endblock title %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Cotizaciones del Servicio</h2>
+            <p class="text-muted mb-0">
+                Vehículo: <strong>{{ servicio.vehiculo.patente }}</strong> | 
+                Cliente: <strong>{{ servicio.vehiculo.cliente.nombre }}</strong>
+            </p>
+            <p class="text-muted">
+                Descripción: {{ servicio.descripcion_trabajo|truncatechars:100 }}
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'cotizaciones:registrar_cotizacion' %}?servicio_id={{ servicio.id }}" class="btn btn-primary">
+                Nueva Cotización
+            </a>
+            <a href="{% url 'vehiculos:servicio_list' %}" class="btn btn-outline-secondary">
+                Volver a Servicios
+            </a>
+        </div>
+    </div>
+
+    {% if cotizaciones %}
+        <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>N° Cotización</th>
+                    <th>Fecha</th>
+                    <th>Forma de Pago</th>
+                    <th>Plazo de Pago</th>
+                    <th>Subtotal</th>
+                    <th>IVA</th>
+                    <th>Monto Total</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cot in cotizaciones %}
+                    <tr>
+                        <td>{{ cot.numero_cotizacion }}</td>
+                        <td>{{ cot.fecha_emision|date:"Y-m-d" }}</td>
+                        <td>{{ cot.get_forma_pago_display }}</td>
+                        <td>{{ cot.get_plazo_pago_display }}</td>
+                        <td>${{ cot.subtotal|floatformat:0 }}</td>
+                        <td>${{ cot.iva|floatformat:0 }}</td>
+                        <td><strong>${{ cot.monto_total|floatformat:0 }}</strong></td>
+                        <td>
+                            <span class="badge 
+                                {% if cot.estado_cotizacion == 'APROBADA' %}bg-success
+                                {% elif cot.estado_cotizacion == 'RECHAZADA' %}bg-danger
+                                {% else %}bg-warning{% endif %}">
+                                {{ cot.get_estado_cotizacion_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="#" class="btn btn-sm btn-outline-primary">Ver PDF</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <h5>No hay cotizaciones para este servicio</h5>
+        <p class="mb-3">Aún no se han generado cotizaciones para este servicio.</p>
+        <a href="{% url 'cotizaciones:registrar_cotizacion' %}?servicio_id={{ servicio.id }}" class="btn btn-primary">
+            Crear Primera Cotización
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock content %}

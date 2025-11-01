@@ -9,6 +9,7 @@ from clientes.models import Cliente
 from .forms import VehiculoForm
 # modulo especifico de el formulario de clientes
 from clientes.forms import ClienteForm
+from cotizaciones.models import Cotizacion
 
 
 def vehiculo_list(request):
@@ -165,3 +166,16 @@ def servicio_update(request, pk):
     else:
         form = ServicioForm(instance=servicio)
     return render(request, 'vehiculos/servicio_form.html', {'form': form, 'accion': 'Editar'})
+
+def servicio_cotizaciones(request, pk):
+    """Muestra el historial de cotizaciones para un servicio específico"""
+    servicio = get_object_or_404(Servicio.objects.select_related('vehiculo', 'vehiculo__cliente'), pk=pk)
+    
+    # Filtrar cotizaciones por este servicio
+    cotizaciones = Cotizacion.objects.filter(servicio=servicio).order_by('-fecha_creacion')
+    
+    context = {
+        'servicio': servicio,
+        'cotizaciones': cotizaciones,
+    }
+    return render(request, 'vehiculos/servicio_cotizaciones.html', context)

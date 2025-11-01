@@ -6,10 +6,10 @@ from django.shortcuts import redirect
 from . import views
 
 urlpatterns = [
-    path("home/", views.home, name="home"),
     path("admin/", admin.site.urls),
+    path("home/", views.home, name="home"),
     path("clientes/", include("clientes.urls")),
-    path("", lambda request: redirect("clientes:list")),
     path("vehiculos/", include("vehiculo.urls")),
     path("cotizaciones/", include("cotizaciones.urls")),
+    path("", lambda request: redirect("clientes:list")),
 ]

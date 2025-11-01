@@ -1,19 +1,85 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
 <h2 class="mb-3">{{ accion }} cliente</h2>
 
-<form method="post" class="card p-3 shadow-sm bg-white">
-  {% csrf_token %} {% for field in form %}
-  <div class="mb-3">
-    <label class="form-label">{{ field.label }}</label>
-    {{ field }} {% if field.errors %} {% for error in field.errors %}
-    <div class="text-danger small">{{ error }}</div>
-    {% endfor %} {% endif %}
-  </div>
-  {% endfor %}
+<form method="post" class="card p-3 shadow-sm bg-white" id="cliente-form">
+    {% csrf_token %}
+    
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">{{ form.nombre.label }} *</label>
+            {{ form.nombre }}
+            {% if form.nombre.errors %}
+                {% for error in form.nombre.errors %}
+                <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label">{{ form.rut.label }}</label>
+            {{ form.rut }}
+            <div class="form-text">Formato: 12.345.678-9</div>
+            {% if form.rut.errors %}
+                {% for error in form.rut.errors %}
+                <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
 
-  <div class="d-flex gap-2">
-    <button type="submit" class="btn btn-primary">💾 Guardar</button>
-    <a href="{% url 'clientes:list' %}" class="btn btn-secondary">⬅️ Volver</a>
-  </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">{{ form.telefono.label }}</label>
+            {{ form.telefono }}
+            {% if form.telefono.errors %}
+                {% for error in form.telefono.errors %}
+                <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label">{{ form.email.label }}</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+                {% for error in form.email.errors %}
+                <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">{{ form.contacto.label }}</label>
+            {{ form.contacto }}
+            {% if form.contacto.errors %}
+                {% for error in form.contacto.errors %}
+                <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label">{{ form.direccion.label }}</label>
+            {{ form.direccion }}
+            {% if form.direccion.errors %}
+                {% for error in form.direccion.errors %}
+                <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">💾 Guardar</button>
+        <a href="{% url 'clientes:list' %}" class="btn btn-secondary">⬅️ Volver</a>
+    </div>
 </form>
+
+<!-- JavaScript para validación de RUT -->
+<script src="{% static 'js/validacion_rut.js' %}"></script>
 {% endblock %}

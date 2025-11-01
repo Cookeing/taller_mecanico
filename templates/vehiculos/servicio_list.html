@@ -36,6 +36,9 @@
             <a href="{% url 'vehiculos:servicio_update' s.id %}" class="btn btn-sm btn-outline-secondary">
               Editar
             </a>
+            <a href="{% url 'vehiculos:servicio_cotizaciones' s.id %}" class="btn btn-sm btn-outline-info ms-1">
+              Ver Cotizaciones
+            </a>
           </td>
         </tr>
         {% empty %}

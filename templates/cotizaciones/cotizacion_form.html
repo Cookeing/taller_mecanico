@@ -1,15 +1,346 @@
 {% extends "base.html" %}
+{% load static %}
 
-<h2>Registrar cotizacion</h2>
-{% block content%}
-{% for message in messages %}
-    {{message}}
-{% endfor %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotización - Chile</title>
+    <link rel="stylesheet" href="{% static 'css/cotizacion.css' %}">
+</head>
+<body>
+    <div class="container">
+        <!-- FORMULARIO SEPARADO solo para enviar datos -->
+        <form method="POST" id="cotizacion-form" style="display: none;">
+            {% csrf_token %}
+            {% if servicio %}
+            <input type="hidden" name="servicio_id" value="{{ servicio.id }}">
+            {% endif %}
+            <input type="hidden" name="items_data" id="items-data">
+            <!-- Campos Django ocultos -->
+            {{ form.empresa_nombre }}
+            {{ form.empresa_rut }}
+            {{ form.empresa_giro }}
+            {{ form.empresa_direccion }}
+            {{ form.empresa_telefono }}
+            {{ form.empresa_email }}
+            {{ form.fecha_emision }}
+            {{ form.fecha_validez }}
+            {{ form.cliente }}
+            {{ form.forma_pago }}
+            {{ form.plazo_pago }}
+        </form>
 
-<form  method="post">
-    {% csrf_token %}
-    {{form.as_p}}
-    <button type="submit">Guardar</button>
-</form>
+        <!-- INTERFAZ VISUAL (NO FORM) -->
+        <div id="cotizacion-ui">
+            <!-- Header -->
+            <div class="header">
+                <div class="company-info">
+                    <div class="company-name">
+               <input type="text" class="company-name-input" placeholder="Ingrese su nombre o el de su compañía" 
+                   value="{{ form.empresa_nombre.value|default:'' }}" 
+                   id="ui-empresa-nombre">
+                    </div>
+                    <div class="company-details">
+                        <div class="info-row">
+                            <span class="info-label">RUT:</span>
+                <input type="text" class="info-input" placeholder="12.345.678-9" 
+                    value="{{ form.empresa_rut.value|default:'' }}" id="ui-empresa-rut">
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Giro:</span>
+                <input type="text" class="info-input" placeholder="Ej: Servicios de Mecánica Automotriz" 
+                    value="{{ form.empresa_giro.value|default:'' }}" id="ui-empresa-giro">
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Dirección:</span>
+                <input type="text" class="info-input" placeholder="Calle, Número, Comuna, Ciudad" 
+                    value="{{ form.empresa_direccion.value|default:'' }}" id="ui-empresa-direccion">
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Teléfono:</span>
+                <input type="text" class="info-input" placeholder="+56 9 1234 5678" 
+                    value="{{ form.empresa_telefono.value|default:'' }}" id="ui-empresa-telefono">
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">E-mail:</span>
+                <input type="text" class="info-input" placeholder="contacto@empresa.cl" 
+                    value="{{ form.empresa_email.value|default:'' }}" id="ui-empresa-email">
+                        </div>
+                    </div>
+                </div>
+                <div class="logo-section">
+                    <div class="logo-upload" id="logo-upload" onclick="document.getElementById('logo-input').click()">
+                        <div class="logo-placeholder">Haga clic para cargar logo</div>
+                        <input type="file" id="logo-input" accept="image/*" onchange="loadLogo(event)">
+                    </div>
+                    <div class="document-info">
+                        <div class="document-number">
+                            <label>N° </label>
+                            <input type="text" class="document-number-input" value="Auto-generado" readonly style="background-color: #f8f9fa;">
+                        </div>
+                        <div class="date-row">
+                            <label>Fecha Emisión:</label>
+                            <input type="date" class="date-input" id="ui-fecha-emision" 
+                                   value="{{ form.fecha_emision.value|default:'' }}">
+                        </div>
+                        <div class="date-row">
+                            <label>Validez hasta:</label>
+                            <input type="date" class="date-input" id="ui-fecha-validez" 
+                                   value="{{ form.fecha_validez.value|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-{% endblock content %}
+            {% if servicio %}
+                <div class="servicio-info-alert" style="background-color: #e3f2fd; border: 1px solid #2196f3; border-radius: 8px; padding: 15px; margin: 20px 0; font-size: 14px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <span style="font-weight: bold; color: #1976d2; font-size: 16px;">📋 Servicio Vinculado</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px 15px; align-items: start;">
+                        <span style="font-weight: 500;">Vehículo:</span>
+                        <span>{{ servicio.vehiculo.patente }} - {{ servicio.vehiculo.marca }} {{ servicio.vehiculo.modelo }}</span>
+                        
+                        <span style="font-weight: 500;">Cliente:</span>
+                        <span>{{ servicio.vehiculo.cliente.nombre }}</span>
+                        
+                        <span style="font-weight: 500;">Descripción:</span>
+                        <span>{{ servicio.descripcion_trabajo|truncatechars:100 }}</span>
+                        
+                        <span style="font-weight: 500;">Estado:</span>
+                        <span>{{ servicio.estado_servicio }}</span>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 13px; color: #555;">
+                        <em>Esta cotización se vinculará automáticamente al servicio.</em>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Client Section -->
+            <div class="client-section">
+                <div class="client-section-header">
+                    <div class="section-title">Datos del Cliente</div>
+                    <div class="client-selector">
+                        <label>Seleccionar Cliente:</label>
+                        <select id="ui-cliente-select">
+                            <option value="">-- Seleccionar cliente (opcional) --</option>
+                            {% for cliente in clientes %}
+                            <option value="{{ cliente.id }}" 
+                                    data-rut="{{ cliente.rut|default:'' }}"
+                                    data-telefono="{{ cliente.telefono|default:'' }}"
+                                    data-direccion="{{ cliente.direccion|default:'' }}"
+                                    data-email="{{ cliente.email|default:'' }}"
+                                    data-contacto="{{ cliente.contacto|default:'' }}"
+                                    {% if form.cliente.value == cliente.id|stringformat:"i" %}selected{% endif %}>
+                                {{ cliente.nombre }} {% if cliente.rut %}({{ cliente.rut }}){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="client-grid">
+                    <div class="form-group full-width">
+                        <label class="form-label">Nombre o Razón Social</label>
+                        <input type="text" class="form-input" id="ui-client-name" placeholder="Nombre completo o razón social del cliente (opcional)" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">RUT</label>
+                        <input type="text" class="form-input" id="ui-client-rut" placeholder="12.345.678-9 (opcional)" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Teléfono</label>
+                        <input type="text" class="form-input" id="ui-client-phone" placeholder="+56 9 1234 5678 (opcional)" readonly>
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">Dirección Completa</label>
+                        <input type="text" class="form-input" id="ui-client-address" placeholder="Calle, Número, Comuna, Ciudad, Región (opcional)" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Correo Electrónico</label>
+                        <input type="text" class="form-input" id="ui-client-email" placeholder="cliente@email.cl (opcional)" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contacto</label>
+                        <input type="text" class="form-input" id="ui-client-contact" placeholder="Nombre de persona de contacto (opcional)" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories Container -->
+            <div class="categories-container" id="categories-container">
+                <!-- Categories will be added here dynamically -->
+            </div>
+
+            <!-- Add Category Button -->
+            <button type="button" class="add-category-btn" id="add-category-btn">+ Agregar Categoría</button>
+
+            <!-- Totals Section -->
+            <div class="clearfix">
+                <div class="totals-section">
+                    <div class="total-row subtotal">
+                        <span class="total-label">SUBTOTAL (Neto)</span>
+                        <span class="total-value" id="subtotal">$0</span>
+                    </div>
+                    <div class="total-row iva">
+                        <span class="total-label">IVA (19%)</span>
+                        <span class="total-value" id="iva">$0</span>
+                    </div>
+                    <div class="total-row final">
+                        <span class="total-label">TOTAL</span>
+                        <span class="total-value" id="total">$0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Conditions -->
+            <div class="payment-conditions clearfix">
+                <div class="section-title">Condiciones de Pago</div>
+                <div class="payment-grid">
+                    <div class="form-group">
+                        <label class="form-label">Forma de Pago</label>
+                        <select class="form-input" id="ui-forma-pago">
+                            <option value="">Seleccione...</option>
+                            <option value="transferencia" {% if form.forma_pago.value == 'transferencia' %}selected{% endif %}>Transferencia Bancaria</option>
+                            <option value="efectivo" {% if form.forma_pago.value == 'efectivo' %}selected{% endif %}>Efectivo</option>
+                            <option value="cheque" {% if form.forma_pago.value == 'cheque' %}selected{% endif %}>Cheque</option>
+                            <option value="tarjeta" {% if form.forma_pago.value == 'tarjeta' %}selected{% endif %}>Tarjeta de Crédito/Débito</option>
+                            <option value="otro" {% if form.forma_pago.value == 'otro' %}selected{% endif %}>Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Plazo de Pago</label>
+                        <select class="form-input" id="ui-plazo-pago">
+                            <option value="">Seleccione...</option>
+                            <option value="contado" {% if form.plazo_pago.value == 'contado' %}selected{% endif %}>Al Contado</option>
+                            <option value="15" {% if form.plazo_pago.value == '15' %}selected{% endif %}>15 días</option>
+                            <option value="30" {% if form.plazo_pago.value == '30' %}selected{% endif %}>30 días</option>
+                            <option value="45" {% if form.plazo_pago.value == '45' %}selected{% endif %}>45 días</option>
+                            <option value="60" {% if form.plazo_pago.value == '60' %}selected{% endif %}>60 días</option>
+                            <option value="90" {% if form.plazo_pago.value == '90' %}selected{% endif %}>90 días</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Signature Section -->
+            <div class="signature-section">
+                <div class="signature-box">
+                    <div class="signature-line">
+                        <div class="signature-label">Firma Emisor</div>
+                        <div class="signature-sublabel">Nombre y RUT</div>
+                    </div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-line">
+                        <div class="signature-label">Firma y Timbre Cliente</div>
+                        <div class="signature-sublabel">Aceptación de la cotización</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-buttons" style="text-align: center; margin: 30px 0;">
+                <button type="button" class="print-button" id="btn-guardar" style="position: static; margin: 10px;">💾 Guardar Cotización</button>
+                <button type="button" class="print-button" id="btn-imprimir" style="position: static; margin: 10px; background-color: #28a745;">🖨️ Imprimir / PDF</button>
+                <button type="button" class="print-button" id="btn-exportar" style="position: static; margin: 10px; background-color: #17a2b8;">📊 Exportar CSV</button>
+                <a href="{% url 'cotizaciones:listar_cotizaciones' %}" class="print-button" style="position: static; margin: 10px; background-color: #6c757d; text-decoration: none; display: inline-block;">❌ Cancelar</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{% static 'js/cotizacion.js' %}"></script>
+    <script>
+        // Inicialización específica para Django
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Inicializando cotización...');
+            
+            // 1. INICIALIZAR PRIMERA CATEGORÍA
+            addCategory();
+            console.log('Categoría inicial creada');
+
+            // 2. Sincronizar datos de cliente si ya hay uno seleccionado
+            const clienteSelect = document.getElementById('ui-cliente-select');
+            if (clienteSelect.value) {
+                const selectedOption = clienteSelect.options[clienteSelect.selectedIndex];
+                if (selectedOption.value) {
+                    document.getElementById('ui-client-name').value = selectedOption.text.split(' (')[0];
+                    document.getElementById('ui-client-rut').value = selectedOption.dataset.rut || '';
+                    document.getElementById('ui-client-phone').value = selectedOption.dataset.telefono || '';
+                    document.getElementById('ui-client-address').value = selectedOption.dataset.direccion || '';
+                    document.getElementById('ui-client-email').value = selectedOption.dataset.email || '';
+                    document.getElementById('ui-client-contact').value = selectedOption.dataset.contacto || '';
+                }
+            }
+
+            // 3. Event listeners
+            document.getElementById('add-category-btn').addEventListener('click', function() {
+                console.log('Agregando categoría...');
+                addCategory();
+            });
+
+            document.getElementById('btn-imprimir').addEventListener('click', printQuote);
+            document.getElementById('btn-exportar').addEventListener('click', exportToCSV);
+
+            // 4. Cliente selection
+            document.getElementById('ui-cliente-select').addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                
+                if (selectedOption.value) {
+                    document.getElementById('ui-client-name').value = selectedOption.text.split(' (')[0];
+                    document.getElementById('ui-client-rut').value = selectedOption.dataset.rut || '';
+                    document.getElementById('ui-client-phone').value = selectedOption.dataset.telefono || '';
+                    document.getElementById('ui-client-address').value = selectedOption.dataset.direccion || '';
+                    document.getElementById('ui-client-email').value = selectedOption.dataset.email || '';
+                    document.getElementById('ui-client-contact').value = selectedOption.dataset.contacto || '';
+                } else {
+                    clearClientFields();
+                }
+            });
+
+            // 5. Botón guardar - SOLO ESTE ENVÍA EL FORMULARIO
+            document.getElementById('btn-guardar').addEventListener('click', function() {
+                console.log('Preparando y enviando formulario...');
+                prepararYEnviarFormulario();
+            });
+
+            console.log('Inicialización completada');
+        });
+
+        function clearClientFields() {
+            document.getElementById('ui-client-name').value = '';
+            document.getElementById('ui-client-rut').value = '';
+            document.getElementById('ui-client-phone').value = '';
+            document.getElementById('ui-client-address').value = '';
+            document.getElementById('ui-client-email').value = '';
+            document.getElementById('ui-client-contact').value = '';
+        }
+
+        function prepararYEnviarFormulario() {
+            // 1. Sincronizar datos de la UI al formulario oculto
+            document.getElementById('id_empresa_nombre').value = document.getElementById('ui-empresa-nombre').value;
+            document.getElementById('id_empresa_rut').value = document.getElementById('ui-empresa-rut').value;
+            document.getElementById('id_empresa_giro').value = document.getElementById('ui-empresa-giro').value;
+            document.getElementById('id_empresa_direccion').value = document.getElementById('ui-empresa-direccion').value;
+            document.getElementById('id_empresa_telefono').value = document.getElementById('ui-empresa-telefono').value;
+            document.getElementById('id_empresa_email').value = document.getElementById('ui-empresa-email').value;
+            document.getElementById('id_fecha_emision').value = document.getElementById('ui-fecha-emision').value;
+            document.getElementById('id_fecha_validez').value = document.getElementById('ui-fecha-validez').value;
+            document.getElementById('id_cliente').value = document.getElementById('ui-cliente-select').value;
+            document.getElementById('id_forma_pago').value = document.getElementById('ui-forma-pago').value;
+            document.getElementById('id_plazo_pago').value = document.getElementById('ui-plazo-pago').value;
+
+            // 2. Preparar items_data
+            updateItemsData();
+
+            // 3. Enviar formulario
+            console.log('Enviando formulario...');
+            document.getElementById('cotizacion-form').submit();
+        }
+    </script>
+</body>
+</html>
+{% endblock %}
