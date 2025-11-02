@@ -1,6 +1,6 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_GET
 from django.utils import timezone
 from datetime import timedelta
@@ -10,7 +10,7 @@ from vehiculo.models import Servicio
 from .models import Cotizacion, ItemCotizacion
 from .forms import CotizacionForm
 from clientes.models import Cliente
-
+from .utils import generar_pdf_cotizacion
 
 
 def RegistrarCotizacion(request):
@@ -138,3 +138,21 @@ def get_cliente_data(request, cliente_id):
 #     """API para obtener vehículos de un cliente"""
 #     vehiculos = Vehiculo.objects.filter(cliente_id=cliente_id).values('id', 'patente', 'marca', 'modelo')
 #     return JsonResponse(list(vehiculos), safe=False)
+
+#$$ esta vista dara al boton de ver el historial la posibilidad de descargar y poder generar el pdf que se creo en utlis.py
+def descargar_pdf_cotizacion(request, cotizacion_id):
+    
+#   se se recoje el id de cliente en el formulario de cotizacion y verifica si exite comparandolo con la bs 
+    cotizacion = get_object_or_404(
+        Cotizacion.objects.select_related('cliente', 'servicio__vehiculo').prefetch_related('items'),
+        id=cotizacion_id
+    )
+    
+    buffer = generar_pdf_cotizacion(cotizacion)
+    
+    # Preparar respuesta HTTP con el pdf generado por la funcion de utils o le buffer  
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="cotizacion_{cotizacion.numero_cotizacion}.pdf"'
+    response.write(buffer.getvalue())
+    
+    return response

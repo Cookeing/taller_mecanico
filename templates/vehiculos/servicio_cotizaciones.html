@@ -62,7 +62,11 @@
                             </span>
                         </td>
                         <td>
-                            <a href="#" class="btn btn-sm btn-outline-primary">Ver PDF</a>
+                                                <a href="{% url 'cotizaciones:descargar_pdf' cot.id %}" 
+                    class="btn btn-sm btn-outline-primary" 
+                    target="_blank">
+                         Ver PDF insano
+</a>
                         </td>
                     </tr>
                 {% endfor %}

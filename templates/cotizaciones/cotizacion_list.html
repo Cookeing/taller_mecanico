@@ -53,7 +53,12 @@
             </span>
           </td>
           <td>
-            <a href="#" class="btn btn-sm btn-outline-primary">Ver PDF</a>
+            <!-- se agrego esto para ver si funciona la descarga de pdf -->
+              <a href="{% url 'cotizaciones:descargar_pdf' cot.id %}" 
+              class="btn btn-sm btn-outline-primary" 
+              target="_blank">
+                Ver PDF insanismo
+    </a>
           </td>
         </tr>
         {% empty %}
