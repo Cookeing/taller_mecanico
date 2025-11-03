@@ -1,3 +1,4 @@
+import os
 import re
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -122,19 +123,49 @@ class Servicio(models.Model):
         return f"Servicio ID {self.pk} a {self.vehiculo.patente}"
 
 
+def documento_upload_to(instance, filename):
+    patente = instance.servicio.vehiculo.patente.replace('-', '').replace(' ', '').upper()
+    return f'documentos/{patente}/{filename}'
+
+
+def ruta_documento(instance, filename):
+    # Obtiene la patente del vehículo
+    try:
+        patente = instance.servicio.vehiculo.patente
+    except AttributeError:
+        patente = "sin_patente"
+
+    # Normaliza el tipo de documento (sin espacios ni tildes)
+    tipo = instance.tipo_documento.lower().replace(" ", "_")
+
+    # Devuelve la ruta: documentos/patente/tipo/archivo
+    return os.path.join('documentos', patente, tipo, filename)
+
+
+TIPO_DOCUMENTO_CHOICES = [
+    ('factura', 'Factura'),
+    ('presupuesto', 'Presupuesto'),
+    ('informe', 'Informe'),
+    ('cotizacion', 'Cotización'),
+    ('manual', 'Manual Técnico'),
+    ('otro', 'Otro'),
+]
+
+
 class Documento(models.Model):
-    """Representa facturas, presupuestos o cualquier registro financiero asociado a un servicio."""
-
-    # Relación OBLIGATORIA (Ya existe: Servicio)
-    servicio = models.ForeignKey(
-        'Servicio',
-        on_delete=models.CASCADE,
-        related_name="documentos" 
+    tipo_documento = models.CharField(
+        max_length=50,
+        choices=TIPO_DOCUMENTO_CHOICES,
+        default='otro'
     )
-
-    tipo_documento = models.CharField(max_length=50) 
     fecha_documento = models.DateField()
-    monto = models.DecimalField(max_digits=10, decimal_places=2)
+    monto = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    archivo = models.FileField(upload_to=ruta_documento)
+    servicio = models.ForeignKey('Servicio', on_delete=models.CASCADE, related_name='documentos')
+    fecha_subida = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-fecha_documento', '-fecha_subida']
 
     def __str__(self):
-        return f"{self.tipo_documento} de {self.monto} para Servicio ID {self.servicio.id}"
+        return f"{self.tipo_documento} - {self.servicio.vehiculo.patente}"

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Documentos del servicio: {{ servicio.id }}</h2>
+
+<form method="POST" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="btn btn-primary">Subir documento</button>
+</form>
+
+<hr>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Tipo</th>
+      <th>Fecha</th>
+      <th>Monto</th>
+      <th>Archivo</th>
+      <th>Fecha subida</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for d in documentos %}
+    <tr>
+      <td>{{ d.tipo_documento }}</td>
+      <td>{{ d.fecha_documento }}</td>
+      <td>${{ d.monto }}</td>
+      <td><a href="{{ d.archivo.url }}" target="_blank">Ver archivo</a></td>
+      <td>{{ d.fecha_subida }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">No hay documentos subidos.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

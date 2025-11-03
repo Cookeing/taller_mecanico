@@ -146,73 +146,12 @@
             </span>
           </td>
           <td>
-            <div class="btn-group" role="group">
-              <!-- Botón Ver/PDF -->
-              <a href="{% url 'cotizaciones:ver_pdf' cot.id %}" 
-                 class="btn btn-sm btn-outline-primary" 
-                 title="Ver PDF" 
-                 target="_blank">
-                <i class="bi bi-eye"></i>
-              </a>
-              
-              <!-- Botón Editar -->
-              <a href="{% url 'cotizaciones:editar_cotizacion' cot.id %}" 
-                 class="btn btn-sm btn-outline-warning" 
-                 title="Editar">
-                <i class="bi bi-pencil"></i>
-              </a>
-              
-              <!-- Botón Duplicar -->
-              <a href="{% url 'cotizaciones:duplicar_cotizacion' cot.id %}" 
-                 class="btn btn-sm btn-outline-info" 
-                 title="Duplicar">
-                <i class="bi bi-files"></i>
-              </a>
-              
-              <!-- Botón Eliminar -->
-              <button type="button" 
-                      class="btn btn-sm btn-outline-danger" 
-                      title="Eliminar"
-                      data-bs-toggle="modal" 
-                      data-bs-target="#deleteModal{{ cot.id }}">
-                <i class="bi bi-trash"></i>
-              </button>
-            </div>
-
-            <!-- Modal de Confirmación de Eliminación -->
-            <div class="modal fade" id="deleteModal{{ cot.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ cot.id }}" aria-hidden="true">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="deleteModalLabel{{ cot.id }}">
-                      <i class="bi bi-exclamation-triangle text-danger"></i>
-                      Confirmar Eliminación
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    <p>¿Está seguro que desea eliminar la cotización <strong>{{ cot.numero_cotizacion }}</strong>?</p>
-                    {% if cot.cliente %}
-                      <p><strong>Cliente:</strong> {{ cot.cliente.nombre }}</p>
-                    {% endif %}
-                    <p><strong>Total:</strong> ${{ cot.monto_total|floatformat:0 }}</p>
-                    <div class="alert alert-warning">
-                      <i class="bi bi-info-circle"></i>
-                      Esta acción no se puede deshacer. Todos los items asociados también serán eliminados.
-                    </div>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <form method="post" action="{% url 'cotizaciones:eliminar_cotizacion' cot.id %}" style="display: inline;">
-                      {% csrf_token %}
-                      <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-trash"></i> Eliminar
-                      </button>
-                    </form>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <!-- se agrego esto para ver si funciona la descarga de pdf -->
+              <a href="{% url 'cotizaciones:descargar_pdf' cot.id %}" 
+              class="btn btn-sm btn-outline-primary" 
+              target="_blank">
+                Ver PDF insanismo
+    </a>
           </td>
         </tr>
         {% empty %}
