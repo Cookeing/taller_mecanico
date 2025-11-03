@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h3>Eliminar documento</h3>
+  <p>¿Seguro que deseas eliminar este documento?</p>
+  <p><strong>{{ documento.tipo_documento }}</strong> — {{ documento.fecha_documento|date:"d/m/Y" }}</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+    <a href="{% url 'vehiculos:documento_list' documento.servicio.id %}" class="btn btn-secondary">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

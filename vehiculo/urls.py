@@ -15,4 +15,8 @@ urlpatterns = [
     path('servicios/nuevo/', v.servicio_create, name='servicio_create'),
     path('servicios/<int:pk>/editar/', v.servicio_update, name='servicio_update'),
     path('servicios/<int:pk>/cotizaciones/', v.servicio_cotizaciones, name='servicio_cotizaciones'),
+    path('servicios/<int:servicio_id>/documentos/', v.documento_list, name='documento_list'),
+    path('servicios/<int:servicio_id>/documentos/subir/', v.documento_upload, name='documento_upload'),
+    path('documentos/<int:pk>/eliminar/', v.documento_delete, name='documento_delete'),
+    path('servicio/<int:servicio_id>/documentos/', v.documentos_servicio, name='documentos_servicio'),
 ]

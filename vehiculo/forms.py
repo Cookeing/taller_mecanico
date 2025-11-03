@@ -1,7 +1,7 @@
 """Formularios de la aplicación Vehículos."""
 
 from django import forms
-from .models import Vehiculo, Servicio, normalizar_patente
+from .models import Vehiculo, Servicio, Documento, normalizar_patente
 
 
 class VehiculoForm(forms.ModelForm):
@@ -129,3 +129,38 @@ class ServicioForm(forms.ModelForm):
             'mano_obra': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'repuestos': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
+
+
+class DocumentoForm(forms.ModelForm):
+    class Meta:
+        model = Documento
+        fields = ['tipo_documento', 'fecha_documento', 'monto', 'archivo']
+        widgets = {
+            'fecha_documento': forms.DateInput(
+                attrs={
+                    'type': 'date',  # genera el calendario
+                    'class': 'form-control'
+                }
+            ),
+            'tipo_documento': forms.Select(
+                choices=[
+                    ('Factura', 'Factura'),
+                    ('Boleta', 'Boleta'),
+                    ('Certificado', 'Certificado'),
+                    ('Presupuesto', 'Presupuesto'),
+                    ('Informe Técnico', 'Informe Técnico'),
+                    ('Otro', 'Otro'),
+                ],
+                attrs={'class': 'form-control'}
+            ),
+            'monto': forms.NumberInput(attrs={'class': 'form-control'}),
+            'archivo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }
+
+    def clean_archivo(self):
+        archivo = self.cleaned_data.get('archivo', False)
+        if archivo:
+            ext = archivo.name.split('.')[-1].lower()
+            if ext not in ['pdf', 'jpg', 'jpeg']:
+                raise forms.ValidationError("Solo se permiten archivos PDF o JPG.")
+        return archivo
