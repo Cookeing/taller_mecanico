@@ -1,12 +1,144 @@
-{% extends "base.html" %} {% block content %}
-<h2 class="mb-3">Eliminar cliente</h2>
-<div class="alert alert-warning">
-  ¿Seguro que deseas eliminar a <strong>{{ cliente.nombre }}</strong> ({{
-  cliente.rut }})?
+{% extends "base.html" %}
+
+{% block title %}Confirmar eliminación - {{ cliente.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="h4 mb-0">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Confirmar eliminación de cliente
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning d-flex align-items-center" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+                        <div>
+                            <h4 class="alert-heading mb-1">¡Atención!</h4>
+                            Estás a punto de eliminar un cliente permanentemente.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-3">Detalles del cliente:</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <th class="text-end pe-3" style="width: 40%;">Nombre:</th>
+                                        <td><strong>{{ cliente.nombre }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-end pe-3">RUT:</th>
+                                        <td>{{ cliente.rut }}</td>
+                                    </tr>
+                                    {% if cliente.email %}
+                                    <tr>
+                                        <th class="text-end pe-3">Email:</th>
+                                        <td>{{ cliente.email }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if cliente.telefono %}
+                                    <tr>
+                                        <th class="text-end pe-3">Teléfono:</th>
+                                        <td>{{ cliente.telefono }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if cliente.direccion %}
+                                    <tr>
+                                        <th class="text-end pe-3">Dirección:</th>
+                                        <td>{{ cliente.direccion }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if cliente.fecha_registro %}
+                                    <tr>
+                                        <th class="text-end pe-3">Fecha de registro:</th>
+                                        <td>{{ cliente.fecha_registro|date:"d/m/Y" }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Advertencia sobre vehículos relacionados -->
+                    {% if cliente.vehiculo_set.all %}
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <strong>¡Advertencia importante!</strong> Este cliente tiene 
+                        <strong>{{ cliente.vehiculo_set.count }}</strong> vehículo(s) asociado(s). 
+                        Al eliminar el cliente, también se eliminarán todos sus vehículos.
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Este cliente no tiene vehículos asociados.
+                    </div>
+                    {% endif %}
+                    
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-x-circle-fill me-2"></i>
+                        <strong>Esta acción no se puede deshacer.</strong> Todos los datos del cliente 
+                        y sus vehículos asociados se perderán permanentemente.
+                    </div>
+                    
+                    <form method="post" id="deleteForm">
+                        {% csrf_token %}
+                        <div class="d-flex flex-column flex-md-row gap-3 justify-content-end">
+                            <a href="{% url 'clientes:list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger" id="deleteButton">
+                                <i class="bi bi-person-x-fill me-1"></i>
+                                Sí, eliminar cliente
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<form method="post" class="d-flex gap-2">
-  {% csrf_token %}
-  <button type="submit" class="btn btn-danger">🗑️ Borrar</button>
-  <a href="{% url 'clientes:list' %}" class="btn btn-secondary">Cancelar</a>
-</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteForm = document.getElementById('deleteForm');
+        const deleteButton = document.getElementById('deleteButton');
+        
+        // Prevenir envío múltiple del formulario
+        deleteForm.addEventListener('submit', function() {
+            deleteButton.disabled = true;
+            deleteButton.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Eliminando...';
+        });
+        
+        // Confirmación adicional con tecla Escape
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                window.location.href = "{% url 'clientes:list' %}";
+            }
+        });
+
+        // Confirmación adicional antes de enviar (opcional)
+        deleteForm.addEventListener('submit', function(e) {
+            const hasVehicles = {{ cliente.vehiculo_set.all|yesno:"true,false" }};
+            let message = '¿Estás seguro de que deseas eliminar este cliente?';
+            
+            if (hasVehicles) {
+                message = 'Este cliente tiene vehículos asociados que también se eliminarán. ¿Estás seguro de que deseas continuar?';
+            }
+            
+            if (!confirm(message)) {
+                e.preventDefault();
+                deleteButton.disabled = false;
+                deleteButton.innerHTML = '<i class="bi bi-person-x-fill me-1"></i> Sí, eliminar cliente';
+            }
+        });
+    });
+</script>
 {% endblock %}

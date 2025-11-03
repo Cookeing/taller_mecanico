@@ -4,7 +4,7 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Vehículos</h2>
     <div>
-      <a href="{% url 'vehiculos:create' %}" class="btn btn-primary">
+      <a href="{% url 'vehiculos:crear' %}" class="btn btn-primary">
         Nuevo Vehículo
       </a>
     </div>
@@ -54,8 +54,9 @@
           <td>{{ v.cliente.rut }}</td>
             
 <td>
-  <a href="{% url 'vehiculos:detail' v.pk %}" class="btn btn-sm btn-outline-primary">Ver</a>
-  <a href="{% url 'vehiculos:edit' v.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+  <a href="{% url 'vehiculos:detalles' v.pk %}" class="btn btn-sm btn-outline-primary">Ver</a>
+  <a href="{% url 'vehiculos:editar' v.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+  <a href="{% url 'vehiculos:eliminar' v.pk %}" class="btn btn-sm btn-outline-danger">Eliminar</a>
 </td>
         </tr>
         {% empty %}

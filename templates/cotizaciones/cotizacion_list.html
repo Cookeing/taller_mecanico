@@ -5,20 +5,88 @@
 {% endblock title %}
 
 {% block content %}
-  <h2>Historial de Cotizaciones</h2>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Historial de Cotizaciones</h2>
+    <a href="{% url 'cotizaciones:registrar_cotizacion' %}" class="btn btn-success">
+      <i class="bi bi-plus-circle"></i> Nueva Cotización
+    </a>
+  </div>
 
+  <!-- Filtros -->
   <form method="get" class="mb-4">
-    <div class="row">
+    <div class="row g-3">
       <div class="col-md-6">
         <label for="cliente" class="form-label">Buscar por cliente:</label>
-        <input type="text" id="cliente" name="cliente" class="form-control" placeholder="Nombre del cliente" value="{{ request.GET.cliente }}">
+        <input type="text" id="cliente" name="cliente" class="form-control" 
+               placeholder="Nombre del cliente" value="{{ request.GET.cliente }}">
       </div>
-      <div class="col-md-6 d-flex align-items-end">
-        <button type="submit" class="btn btn-primary">Filtrar</button>
+      <div class="col-md-4">
+        <label for="estado" class="form-label">Filtrar por estado:</label>
+        <select id="estado" name="estado" class="form-select">
+          <option value="">Todos los estados</option>
+          <option value="PENDIENTE" {% if request.GET.estado == 'PENDIENTE' %}selected{% endif %}>Pendiente</option>
+          <option value="APROBADA" {% if request.GET.estado == 'APROBADA' %}selected{% endif %}>Aprobada</option>
+          <option value="RECHAZADA" {% if request.GET.estado == 'RECHAZADA' %}selected{% endif %}>Rechazada</option>
+        </select>
+      </div>
+      <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-funnel"></i> Filtrar
+        </button>
       </div>
     </div>
   </form>
 
+  <!-- Estadísticas rápidas -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card text-white bg-primary">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4 class="card-title">{{ cotizaciones.paginator.count }}</h4>
+              <p class="card-text">Total Cotizaciones</p>
+            </div>
+            <div class="align-self-center">
+              <i class="bi bi-file-text fs-1"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-white bg-success">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4 class="card-title">{{ cotizaciones_aprobadas }}</h4>
+              <p class="card-text">Aprobadas</p>
+            </div>
+            <div class="align-self-center">
+              <i class="bi bi-check-circle fs-1"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-white bg-warning">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4 class="card-title">{{ cotizaciones_pendientes }}</h4>
+              <p class="card-text">Pendientes</p>
+            </div>
+            <div class="align-self-center">
+              <i class="bi bi-clock fs-1"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de cotizaciones -->
   <div class="table-responsive">
     <table class="table table-striped table-hover">
       <thead class="table-dark">
@@ -34,36 +102,180 @@
       <tbody>
         {% for cot in cotizaciones %}
         <tr>
-          <td>{{ cot.numero_cotizacion }}</td>
+          <td>
+            <strong>{{ cot.numero_cotizacion }}</strong>
+            {% if cot.servicio %}
+              <br>
+              <small class="text-muted">
+                <i class="bi bi-tools"></i> Servicio #{{ cot.servicio.id }}
+              </small>
+            {% endif %}
+          </td>
           <td>
             {% if cot.cliente %}
-              {{ cot.cliente.nombre }}
+              <div class="fw-bold">{{ cot.cliente.nombre }}</div>
+              {% if cot.cliente.rut %}
+                <small class="text-muted">{{ cot.cliente.rut }}</small>
+              {% endif %}
             {% else %}
               <span class="text-muted">Sin cliente</span>
             {% endif %}
           </td>
-          <td>{{ cot.fecha_creacion|date:"Y-m-d H:i" }}</td>
-          <td>${{ cot.monto_total|floatformat:0 }}</td>
+          <td>
+            <div>{{ cot.fecha_creacion|date:"d/m/Y" }}</div>
+            <small class="text-muted">{{ cot.fecha_creacion|date:"H:i" }}</small>
+          </td>
+          <td>
+            <strong>${{ cot.monto_total|floatformat:0 }}</strong>
+            <br>
+            <small class="text-muted">Neto: ${{ cot.subtotal|floatformat:0 }}</small>
+          </td>
           <td>
             <span class="badge 
               {% if cot.estado_cotizacion == 'APROBADA' %}bg-success
               {% elif cot.estado_cotizacion == 'RECHAZADA' %}bg-danger
               {% else %}bg-warning{% endif %}">
-              {{ cot.estado_cotizacion }}
+              {% if cot.estado_cotizacion == 'PENDIENTE' %}
+                <i class="bi bi-clock"></i>
+              {% elif cot.estado_cotizacion == 'APROBADA' %}
+                <i class="bi bi-check-circle"></i>
+              {% elif cot.estado_cotizacion == 'RECHAZADA' %}
+                <i class="bi bi-x-circle"></i>
+              {% endif %}
+              {{ cot.get_estado_cotizacion_display }}
             </span>
           </td>
           <td>
-            <a href="#" class="btn btn-sm btn-outline-primary">Ver PDF</a>
+            <div class="btn-group" role="group">
+              <!-- Botón Ver/PDF -->
+              <a href="{% url 'cotizaciones:ver_pdf' cot.id %}" 
+                 class="btn btn-sm btn-outline-primary" 
+                 title="Ver PDF" 
+                 target="_blank">
+                <i class="bi bi-eye"></i>
+              </a>
+              
+              <!-- Botón Editar -->
+              <a href="{% url 'cotizaciones:editar_cotizacion' cot.id %}" 
+                 class="btn btn-sm btn-outline-warning" 
+                 title="Editar">
+                <i class="bi bi-pencil"></i>
+              </a>
+              
+              <!-- Botón Duplicar -->
+              <a href="{% url 'cotizaciones:duplicar_cotizacion' cot.id %}" 
+                 class="btn btn-sm btn-outline-info" 
+                 title="Duplicar">
+                <i class="bi bi-files"></i>
+              </a>
+              
+              <!-- Botón Eliminar -->
+              <button type="button" 
+                      class="btn btn-sm btn-outline-danger" 
+                      title="Eliminar"
+                      data-bs-toggle="modal" 
+                      data-bs-target="#deleteModal{{ cot.id }}">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+
+            <!-- Modal de Confirmación de Eliminación -->
+            <div class="modal fade" id="deleteModal{{ cot.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ cot.id }}" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel{{ cot.id }}">
+                      <i class="bi bi-exclamation-triangle text-danger"></i>
+                      Confirmar Eliminación
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <p>¿Está seguro que desea eliminar la cotización <strong>{{ cot.numero_cotizacion }}</strong>?</p>
+                    {% if cot.cliente %}
+                      <p><strong>Cliente:</strong> {{ cot.cliente.nombre }}</p>
+                    {% endif %}
+                    <p><strong>Total:</strong> ${{ cot.monto_total|floatformat:0 }}</p>
+                    <div class="alert alert-warning">
+                      <i class="bi bi-info-circle"></i>
+                      Esta acción no se puede deshacer. Todos los items asociados también serán eliminados.
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form method="post" action="{% url 'cotizaciones:eliminar_cotizacion' cot.id %}" style="display: inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Eliminar
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
           </td>
         </tr>
         {% empty %}
         <tr>
           <td colspan="6" class="text-center py-4">
-            <div class="text-muted">No hay cotizaciones registradas.</div>
+            <div class="text-muted">
+              <i class="bi bi-inbox fs-1"></i>
+              <p class="mt-2">No hay cotizaciones registradas.</p>
+              <a href="{% url 'cotizaciones:registrar_cotizacion' %}" class="btn btn-primary mt-2">
+                <i class="bi bi-plus-circle"></i> Crear Primera Cotización
+              </a>
+            </div>
           </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
+
+  <!-- Paginación -->
+  {% if is_paginated %}
+  <nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page=1{% if request.GET.cliente %}&cliente={{ request.GET.cliente }}{% endif %}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">&laquo; Primera</a>
+        </li>
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.cliente %}&cliente={{ request.GET.cliente }}{% endif %}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">Anterior</a>
+        </li>
+      {% endif %}
+
+      <li class="page-item active">
+        <span class="page-link">
+          Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+        </span>
+      </li>
+
+      {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.cliente %}&cliente={{ request.GET.cliente }}{% endif %}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">Siguiente</a>
+        </li>
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.cliente %}&cliente={{ request.GET.cliente }}{% endif %}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">Última &raquo;</a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
 {% endblock content %}
+
+{% block extra_js %}
+<script>
+  // Confirmación para duplicar
+  document.addEventListener('DOMContentLoaded', function() {
+    const duplicarButtons = document.querySelectorAll('a[href*="duplicar"]');
+    duplicarButtons.forEach(button => {
+      button.addEventListener('click', function(e) {
+        if (!confirm('¿Desea crear una copia de esta cotización? Se generará un nuevo número.')) {
+          e.preventDefault();
+        }
+      });
+    });
+  });
+</script>
+{% endblock extra_js %}
