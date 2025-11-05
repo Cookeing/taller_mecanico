@@ -72,7 +72,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'taller_mecanico',
         'USER': 'root',
-        'PASSWORD': '',   # si en XAMPP root no tiene contraseña
+        'PASSWORD': '',
         'HOST': '127.0.0.1',
         'PORT': 3306,
         'OPTIONS': {

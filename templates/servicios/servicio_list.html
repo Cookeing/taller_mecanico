@@ -32,25 +32,29 @@
           <td>{{ s.descripcion_trabajo }}</td>
           <td>${{ s.total|floatformat:0|intcomma }}</td>
           <td>
+            <!-- INICIO DEL CAMBIO: El formulario se envía automáticamente al cambiar el estado -->
             <form method="post" action="{% url 'servicios:cambiar_estado' s.id %}">
               {% csrf_token %}
               <div class="input-group input-group-sm">
-                <select name="estado" class="form-select form-select-sm 
+                <!-- Se añade onchange="this.form.submit()" para enviar el formulario automáticamente -->
+                <select name="estado" 
+                  onchange="this.form.submit()"
+                  class="form-select form-select-sm 
                   {% if s.estado == 'pendiente' %}text-secondary
                   {% elif s.estado == 'proceso' %}text-warning fw-bold
                   {% elif s.estado == 'completado' %}text-success fw-bold
                   {% elif s.estado == 'cancelado' %}text-danger fw-bold
-                  {% endif %}">
+                  {% endif %}"
+                >
                   <option value="pendiente" {% if s.estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
                   <option value="proceso" {% if s.estado == 'proceso' %}selected{% endif %}>En proceso</option>
                   <option value="completado" {% if s.estado == 'completado' %}selected{% endif %}>Completado</option>
                   <option value="cancelado" {% if s.estado == 'cancelado' %}selected{% endif %}>Cancelado</option>
                 </select>
-                <button type="submit" class="btn btn-outline-success btn-sm">
-                  Guardar
-                </button>
+                <!-- El botón de Guardar ha sido eliminado -->
               </div>
             </form>
+            <!-- FIN DEL CAMBIO -->
           </td>
           <td>
             <a href="{% url 'servicios:update' s.id %}" class="btn btn-sm btn-warning">Editar</a>
