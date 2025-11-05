@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Confirmar eliminación - {{ vehiculo.patente }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="h4 mb-0">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Confirmar eliminación
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning d-flex align-items-center" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+                        <div>
+                            <h4 class="alert-heading mb-1">¡Atención!</h4>
+                            Estás a punto de eliminar un vehículo permanentemente.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-3">Detalles del vehículo:</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <th class="text-end pe-3">Patente:</th>
+                                        <td><strong>{{ vehiculo.patente }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-end pe-3">ID:</th>
+                                        <td>{{ vehiculo.id }}</td>
+                                    </tr>
+                                    {% if vehiculo.marca %}
+                                    <tr>
+                                        <th class="text-end pe-3">Marca:</th>
+                                        <td>{{ vehiculo.marca }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if vehiculo.modelo %}
+                                    <tr>
+                                        <th class="text-end pe-3">Modelo:</th>
+                                        <td>{{ vehiculo.modelo }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if vehiculo.año %}
+                                    <tr>
+                                        <th class="text-end pe-3">Año:</th>
+                                        <td>{{ vehiculo.año }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <strong>Esta acción no se puede deshacer.</strong> Todos los datos relacionados con este vehículo se perderán permanentemente.
+                    </div>
+                    
+                    <form method="post" id="deleteForm">
+                        {% csrf_token %}
+                        <div class="d-flex flex-column flex-md-row gap-3 justify-content-end">
+                            <a href="{% url 'vehiculos:list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger" id="deleteButton">
+                                <i class="bi bi-trash-fill me-1"></i>
+                                Sí, eliminar vehículo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteForm = document.getElementById('deleteForm');
+        const deleteButton = document.getElementById('deleteButton');
+        
+        // Prevenir envío múltiple del formulario
+        deleteForm.addEventListener('submit', function() {
+            deleteButton.disabled = true;
+            deleteButton.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Eliminando...';
+        });
+        
+        // Confirmación adicional con tecla Escape
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                window.location.href = "{% url 'vehiculos:list' %}";
+            }
+        });
+    });
+</script>
+{% endblock %}

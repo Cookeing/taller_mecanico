@@ -1,0 +1,37 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-4">
+  <h2>Servicios Asociados a Cotización</h2>
+  <p>
+    Cotización: {{ cotizacion.id }} — Cliente: {{ cotizacion.cliente.nombre }}
+  </p>
+
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Vehículo</th>
+        <th>Fecha</th>
+        <th>Descripción</th>
+        <th>Costo</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for servicio in servicios %}
+      <tr>
+        <td>{{ servicio.id }}</td>
+        <td>{{ servicio.vehiculo.patente }}</td>
+        <td>{{ servicio.fecha_servicio|date:"d/m/Y" }}</td>
+        <td>{{ servicio.descripcion }}</td>
+        <td>${{ servicio.costo_total }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" class="text-center">No hay servicios asociados.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <a href="{% url 'servicios:list' %}" class="btn btn-secondary">Volver</a>
+</div>
+{% endblock %}

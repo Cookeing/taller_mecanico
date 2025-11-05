@@ -1,0 +1,82 @@
+{% extends "base.html" %} {% block content %}
+<div class="container py-4">
+  <div class="card shadow-sm border-0">
+    <div class="card-header bg-dark text-white">
+      <h4 class="mb-0">{{ accion }} Servicio</h4>
+    </div>
+
+    <div class="card-body">
+      <!-- Mostrar mensajes de error generales -->
+      {% if form.errors %}
+      <div class="alert alert-danger">
+        <strong>Corrige los siguientes errores:</strong>
+        <ul class="mb-0">
+          {% for field, errors in form.errors.items %}
+          <li><strong>{{ field|capfirst }}:</strong> {{ errors|join:", " }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <!-- Vehículo -->
+        <div class="mb-3">
+          <label for="id_vehiculo" class="form-label fw-semibold"
+            >Vehículo:</label
+          >
+          {{ form.vehiculo }}
+        </div>
+
+        <!-- Descripción -->
+        <div class="mb-3">
+          <label for="id_descripcion_trabajo" class="form-label fw-semibold"
+            >Descripción del trabajo:</label
+          >
+          {{ form.descripcion_trabajo }}
+        </div>
+
+        <!-- Fecha -->
+        <div class="mb-3">
+          <label for="id_fecha_servicio" class="form-label fw-semibold"
+            >Fecha del servicio:</label
+          >
+          {{ form.fecha_servicio }}
+        </div>
+
+        <!-- Estado -->
+        <div class="mb-3">
+          <label for="id_estado" class="form-label fw-semibold">Estado:</label>
+          {{ form.estado }}
+        </div>
+
+        <!-- Total -->
+        <div class="mb-3">
+          <label for="id_total" class="form-label fw-semibold"
+            >Total ($):</label
+          >
+          <div class="input-group">
+            <span class="input-group-text">$</span>
+            {{ form.total }}
+          </div>
+          <div class="form-text text-muted">
+            Ingrese el monto con o sin puntos de miles. Ejemplo:
+            <code>15.000</code> o <code>15000</code>
+          </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="d-flex justify-content-between mt-4">
+          <a href="{% url 'servicios:list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+          </a>
+          <button type="submit" class="btn btn-success px-4">
+            <i class="bi bi-save"></i> {{ accion }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Servicios Realizados</h2>
+  <a href="{% url 'servicios:create' %}" class="btn btn-primary mb-3">
+    Nuevo Servicio
+  </a>
+
+  {% if servicios %}
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Vehículo</th>
+          <th>Cliente</th>
+          <th>Fecha</th>
+          <th>Descripción</th>
+          <th>Costo</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in servicios %}
+        <tr>
+          <td>{{ s.id }}</td>
+          <td>{{ s.vehiculo.patente }}</td>
+          <td>{{ s.vehiculo.cliente.nombre }}</td>
+          <td>{{ s.fecha_servicio|date:"d/m/Y" }}</td>
+          <td>{{ s.descripcion_trabajo }}</td>
+          <td>${{ s.total|floatformat:0|intcomma }}</td>
+          <td>
+            <form method="post" action="{% url 'servicios:cambiar_estado' s.id %}">
+              {% csrf_token %}
+              <div class="input-group input-group-sm">
+                <select name="estado" class="form-select form-select-sm 
+                  {% if s.estado == 'pendiente' %}text-secondary
+                  {% elif s.estado == 'proceso' %}text-warning fw-bold
+                  {% elif s.estado == 'completado' %}text-success fw-bold
+                  {% elif s.estado == 'cancelado' %}text-danger fw-bold
+                  {% endif %}">
+                  <option value="pendiente" {% if s.estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                  <option value="proceso" {% if s.estado == 'proceso' %}selected{% endif %}>En proceso</option>
+                  <option value="completado" {% if s.estado == 'completado' %}selected{% endif %}>Completado</option>
+                  <option value="cancelado" {% if s.estado == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                </select>
+                <button type="submit" class="btn btn-outline-success btn-sm">
+                  Guardar
+                </button>
+              </div>
+            </form>
+          </td>
+          <td>
+            <a href="{% url 'servicios:update' s.id %}" class="btn btn-sm btn-warning">Editar</a>
+            <a href="{% url 'vehiculos:documentos_servicio' s.id %}" class="btn btn-sm btn-info">Documentos</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="alert alert-warning">No hay servicios registrados.</div>
+  {% endif %}
+</div>
+
+{% if messages %}
+<div class="container mt-3">
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

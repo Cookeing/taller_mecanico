@@ -14,6 +14,7 @@ urlpatterns = [
     path("vehiculos/", include("vehiculo.urls")),
     path("cotizaciones/", include("cotizaciones.urls")),
     path("", lambda request: redirect("clientes:list")),
+    path('servicios/', include('servicios.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

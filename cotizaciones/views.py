@@ -6,7 +6,7 @@ from django.utils import timezone
 from datetime import timedelta
 import json
 
-from vehiculo.models import Servicio
+from servicios.models import Servicio
 from .models import Cotizacion, ItemCotizacion
 from .forms import CotizacionForm
 from clientes.models import Cliente

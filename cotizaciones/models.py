@@ -6,7 +6,7 @@ from django.utils import timezone
 import random
 import string
 
-from vehiculo.models import Servicio
+from servicios.models import Servicio
 
 class Cotizacion(models.Model):
     ESTADO_COTIZACION_CHOICES = [

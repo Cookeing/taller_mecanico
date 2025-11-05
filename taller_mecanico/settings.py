@@ -30,6 +30,8 @@ INSTALLED_APPS = [
     'clientes',
     'vehiculo',
     'cotizaciones',
+    'servicios',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [

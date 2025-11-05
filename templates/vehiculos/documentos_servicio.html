@@ -1,37 +1,73 @@
-{% extends 'base.html' %}
-{% block content %}
-<h2>Documentos del servicio: {{ servicio.id }}</h2>
+{% extends 'base.html' %} {% load humanize %} {% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">
+    Documentos del servicio <span class="text-primary">#{{ servicio.id }}</span>
+  </h2>
 
-<form method="POST" enctype="multipart/form-data">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit" class="btn btn-primary">Subir documento</button>
-</form>
+  <!-- Formulario para subir nuevo documento -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-body">
+      <form method="POST" enctype="multipart/form-data" class="row g-3">
+        {% csrf_token %} {{ form.as_p }}
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary">Subir documento</button>
+          <a href="{% url 'servicios:list' %}" class="btn btn-secondary"
+            >Volver</a
+          >
+        </div>
+      </form>
+    </div>
+  </div>
 
-<hr>
+  <hr />
 
-<table class="table table-striped">
-  <thead>
-    <tr>
-      <th>Tipo</th>
-      <th>Fecha</th>
-      <th>Monto</th>
-      <th>Archivo</th>
-      <th>Fecha subida</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for d in documentos %}
-    <tr>
-      <td>{{ d.tipo_documento }}</td>
-      <td>{{ d.fecha_documento }}</td>
-      <td>${{ d.monto }}</td>
-      <td><a href="{{ d.archivo.url }}" target="_blank">Ver archivo</a></td>
-      <td>{{ d.fecha_subida }}</td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="5">No hay documentos subidos.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+  <!-- Tabla de documentos -->
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered align-middle shadow-sm">
+      <thead class="table-dark text-center">
+        <tr>
+          <th>Tipo</th>
+          <th>Fecha</th>
+          <th>Monto</th>
+          <th>Archivo</th>
+          <th>Fecha subida</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in documentos %}
+        <tr>
+          <td>{{ d.tipo_documento }}</td>
+          <td>{{ d.fecha_documento|date:"d/m/Y" }}</td>
+          <td class="text-success fw-bold">
+            ${{ d.monto|floatformat:0|intcomma }}
+          </td>
+
+          <!-- ✅ Evita error cuando no hay archivo -->
+          <td class="text-center">
+            {% if d.archivo %}
+            <a
+              href="{{ d.archivo.url }}"
+              target="_blank"
+              class="btn btn-sm btn-outline-primary"
+            >
+              Ver archivo
+            </a>
+            {% else %}
+            <span class="text-muted">Sin archivo</span>
+            {% endif %}
+          </td>
+
+          <td>{{ d.fecha_subida|date:"d/m/Y H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center text-muted">
+            No hay documentos subidos.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}

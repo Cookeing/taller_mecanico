@@ -1,27 +1,30 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
-from django.db import models
-from .models import Vehiculo, Servicio, Documento
-from .forms import ServicioForm, DocumentoForm
-from clientes.models import Cliente
-from .forms import VehiculoForm
-# modulo especifico de el formulario de clientes
-from clientes.forms import ClienteForm
-from cotizaciones.models import Cotizacion
+from django.db.models import Q
 from django.contrib import messages
 
+from .models import Vehiculo, Documento
+from .forms import VehiculoForm, DocumentoForm
+from clientes.models import Cliente
+from clientes.forms import ClienteForm
+from servicios.models import Servicio
 
 
 def vehiculo_list(request):
-    """Página HTML con tabla y dos barras de búsqueda (clientes/vehículos)."""
-    # mostramos todos por defecto (la búsqueda dinámica se hace vía JS -> API)
-    vehiculos = Vehiculo.objects.select_related("cliente").all().order_by("patente")
+    """
+    Lista de vehículos con el cliente precargado.
+    """
+    vehiculos = (
+        Vehiculo.objects
+        .select_related("cliente")
+        .all()
+        .order_by("patente")
+    )
     return render(request, "vehiculos/vehiculo_list.html", {"vehiculos": vehiculos})
 
 
 def vehiculo_create(request):
-    """Crea un nuevo vehículo."""
     if request.method == "POST":
         form = VehiculoForm(request.POST)
         if form.is_valid():
@@ -29,12 +32,12 @@ def vehiculo_create(request):
             return redirect("vehiculos:list")
     else:
         form = VehiculoForm()
-    
+
     return render(request, "vehiculos/vehiculo_form.html", {
         "form": form,
-        "accion": "Registrar"
+        "accion": "Registrar",
     })
-    4
+
 
 def vehiculo_update(request, pk):
     vehiculo = get_object_or_404(Vehiculo, pk=pk)
@@ -45,9 +48,13 @@ def vehiculo_update(request, pk):
             return redirect("vehiculos:list")
     else:
         form = VehiculoForm(instance=vehiculo)
-    return render(request, "vehiculos/vehiculo_form.html", {"form": form,
-                                                            "ClienteForm": ClienteForm(), #aqui esta el formulario de cliente
-                                                            "accion": "Editar"})    
+
+    # ojo: aquí solo mostramos el form de cliente si lo necesitas en el template
+    return render(request, "vehiculos/vehiculo_form.html", {
+        "form": form,
+        "ClienteForm": ClienteForm(),
+        "accion": "Editar",
+    })
 
 
 def vehiculo_delete(request, pk):
@@ -59,41 +66,97 @@ def vehiculo_delete(request, pk):
 
 
 def vehiculo_detail(request, pk):
-    # 1. Obtenemos el vehículo y precargamos el cliente para evitar consultas extras.
-    vehiculo = get_object_or_404(Vehiculo.objects.select_related("cliente"), pk=pk)
+    """
+    Muestra el vehículo + todos los servicios del vehículo + documentos de cada servicio.
+    """
+    vehiculo = get_object_or_404(
+        Vehiculo.objects.select_related("cliente"),
+        pk=pk,
+    )
 
-    # 2. Obtenemos todos los servicios asociados al vehículo.
-    #    Hacemos un 'prefetch_related' para obtener los documentos de TODOS los servicios
-    #    en una sola consulta eficiente, en lugar de una consulta por cada servicio.
-    servicios = vehiculo.servicios.all().order_by("-fecha_servicio").prefetch_related("documentos")
-    
-    # NOTA: Ahora, cada objeto 's' en 'servicios' ya tiene cargado su s.documento_set.all()
-    #       (gracias a prefetch_related), lo que hace que la plantilla sea simple.
+    # related_name='servicios' en Servicio -> vehiculo.servicios.all()
+    servicios = (
+        vehiculo.servicios
+        .all()
+        .prefetch_related("documentos")
+        .order_by("-fecha_servicio")
+    )
 
-    # 3. Preparamos el contexto. Ya no necesitamos 'documentos_por_servicio'.
-    context = {
+    return render(request, "vehiculos/vehiculo_detail.html", {
         "vehiculo": vehiculo,
         "servicios": servicios,
-        # "documentos_por_servicio" ya no es necesario
-    }
-    
-    return render(request, "vehiculos/vehiculo_detail.html", context)
+    })
 
+
+# ========== DOCUMENTOS DE UN SERVICIO ==========
+
+def documentos_servicio(request, servicio_id):
+    servicio = get_object_or_404(Servicio, id=servicio_id)
+    documentos = servicio.documentos.all().order_by('-fecha_documento')
+
+    if request.method == "POST":
+        form = DocumentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            doc = form.save(commit=False)
+            doc.servicio = servicio
+            doc.save()
+            messages.success(request, "Documento subido con éxito.")
+            return redirect("vehiculos:documentos_servicio", servicio_id=servicio.id)
+    else:
+        form = DocumentoForm()
+
+    return render(request, "vehiculos/documentos_servicio.html", {
+        "servicio": servicio,
+        "documentos": documentos,
+        "form": form,
+    })
+
+
+def documento_upload(request, servicio_id):
+    servicio = get_object_or_404(Servicio, pk=servicio_id)
+    if request.method == "POST":
+        form = DocumentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            doc = form.save(commit=False)
+            doc.servicio = servicio
+            doc.save()
+            messages.success(request, "Documento subido con éxito.")
+    return redirect("vehiculos:documentos_servicio", servicio_id=servicio.id)
+
+
+def documento_delete(request, pk):
+    documento = get_object_or_404(Documento, pk=pk)
+    servicio_id = documento.servicio.id
+    if request.method == "POST":
+        documento.delete()
+        messages.success(request, "Documento eliminado correctamente.")
+        return redirect("vehiculos:documentos_servicio", servicio_id=servicio_id)
+
+    return render(request, "vehiculos/documento_confirm_delete.html", {
+        "documento": documento,
+    })
+
+
+# ========== APIs PARA LOS JS DE BÚSQUEDA ==========
 
 @require_GET
 def buscar_vehiculos_api(request):
     """
-    Endpoint JSON para live-search de vehículos por patente.
-    Ej: /vehiculos/api/buscar/?q=ABC
+    /vehiculos/api/buscar/?q=ABC
+    Busca por patente.
     """
     q = request.GET.get("q", "").strip()
     if not q:
         return JsonResponse([], safe=False)
 
-    # Búsqueda más eficiente con icontains
-    qs = Vehiculo.objects.filter(patente__icontains=q).select_related("cliente")[:50]
+    vehiculos = (
+        Vehiculo.objects
+        .filter(patente__icontains=q)
+        .select_related("cliente")[:50]
+    )
+
     data = []
-    for v in qs:
+    for v in vehiculos:
         data.append({
             "id": v.id,
             "patente": v.patente,
@@ -104,129 +167,35 @@ def buscar_vehiculos_api(request):
         })
     return JsonResponse(data, safe=False)
 
+
+@require_GET
 def buscar_vehiculos_por_cliente_api(request):
     """
-    Endpoint JSON para buscar vehículos por cliente (nombre o RUT).
-    Ej: /vehiculos/api/buscar-por-cliente/?q=juan
+    /vehiculos/api/cliente/?q=juan
+    Busca vehículos por nombre o RUT del cliente.
     """
     q = request.GET.get("q", "").strip()
     if not q:
         return JsonResponse([], safe=False)
 
-    try:
-        # Buscar clientes que coincidan con la query
-        clientes_coincidentes = Cliente.objects.filter(
-            models.Q(nombre__icontains=q) | models.Q(rut__icontains=q)
-        )
-        
-        # Obtener vehículos de esos clientes
-        vehiculos = Vehiculo.objects.filter(
-            cliente__in=clientes_coincidentes
-        ).select_related("cliente")[:50]
-        
-        data = []
-        for v in vehiculos:
-            data.append({
-                "id": v.id,
-                "patente": v.patente,
-                "marca": v.marca or "",
-                "modelo": v.modelo or "",
-                "cliente": v.cliente.nombre if v.cliente else "",
-                "cliente_rut": v.cliente.rut if v.cliente else "",
-            })
-        return JsonResponse(data, safe=False)
-    
-    except Exception as e:
-        # Para debugging - muestra el error en la consola
-        print(f"Error en búsqueda por cliente: {e}")
-        return JsonResponse([], safe=False)
-    
-def servicio_list(request):
-    servicios = Servicio.objects.select_related('vehiculo', 'vehiculo__cliente').order_by('-fecha_creacion')
-    return render(request, 'vehiculos/servicio_list.html', {'servicios': servicios})
+    clientes = Cliente.objects.filter(
+        Q(nombre__icontains=q) | Q(rut__icontains=q)
+    )
 
+    vehiculos = (
+        Vehiculo.objects
+        .filter(cliente__in=clientes)
+        .select_related("cliente")[:50]
+    )
 
-def servicio_create(request):
-    if request.method == 'POST':
-        form = ServicioForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('vehiculos:servicio_list')
-    else:
-        form = ServicioForm()
-    return render(request, 'vehiculos/servicio_form.html', {'form': form, 'accion': 'Registrar'})
-
-
-def servicio_update(request, pk):
-    servicio = get_object_or_404(Servicio, pk=pk)
-    if request.method == 'POST':
-        form = ServicioForm(request.POST, instance=servicio)
-        if form.is_valid():
-            form.save()
-            return redirect('vehiculos:servicio_list')
-    else:
-        form = ServicioForm(instance=servicio)
-    return render(request, 'vehiculos/servicio_form.html', {'form': form, 'accion': 'Editar'})
-
-def servicio_cotizaciones(request, pk):
-    """Muestra el historial de cotizaciones para un servicio específico"""
-    servicio = get_object_or_404(Servicio.objects.select_related('vehiculo', 'vehiculo__cliente'), pk=pk)
-    
-    # Filtrar cotizaciones por este servicio
-    cotizaciones = Cotizacion.objects.filter(servicio=servicio).order_by('-fecha_creacion')
-    
-    context = {
-        'servicio': servicio,
-        'cotizaciones': cotizaciones,
-    }
-    return render(request, 'vehiculos/servicio_cotizaciones.html', context)
-
-
-def documento_list(request, servicio_id):
-    servicio = get_object_or_404(Servicio, pk=servicio_id)
-    documentos = servicio.documentos.all()
-    form = DocumentoForm()
-    return render(request, 'vehiculos/documento_list.html', {'servicio': servicio, 'documentos': documentos, 'form': form})
-
-def documento_upload(request, servicio_id):
-    servicio = get_object_or_404(Servicio, pk=servicio_id)
-    if request.method == 'POST':
-        form = DocumentoForm(request.POST, request.FILES)
-        if form.is_valid():
-            doc = form.save(commit=False)
-            doc.servicio = servicio
-            doc.save()
-            messages.success(request, "Documento subido con éxito.")
-            return redirect('vehiculos:documento_list', servicio_id=servicio.id)
-    return redirect('vehiculos:documento_list', servicio_id=servicio.id)
-
-def documento_delete(request, pk):
-    documento = get_object_or_404(Documento, pk=pk)
-    servicio_id = documento.servicio.id
-    if request.method == 'POST':
-        documento.delete()
-        return redirect('vehiculos:documento_list', servicio_id=servicio_id)
-    return render(request, 'vehiculos/documento_confirm_delete.html', {'documento': documento})
-
-
-def documentos_servicio(request, servicio_id):
-    servicio = get_object_or_404(Servicio, id=servicio_id)
-    documentos = servicio.documentos.all().order_by('-fecha_documento')
-
-    if request.method == 'POST':
-        form = DocumentoForm(request.POST, request.FILES)
-        if form.is_valid():
-            doc = form.save(commit=False)
-            doc.servicio = servicio
-            doc.save()
-            messages.success(request, "Documento subido con éxito.")
-            return redirect('documentos_servicio', servicio_id=servicio.id)
-    else:
-        form = DocumentoForm()
-
-    return render(request, 'vehiculos/documentos_servicio.html', {
-
-        'servicio': servicio,
-        'documentos': documentos,
-        'form': form
-    })
+    data = []
+    for v in vehiculos:
+        data.append({
+            "id": v.id,
+            "patente": v.patente,
+            "marca": v.marca or "",
+            "modelo": v.modelo or "",
+            "cliente": v.cliente.nombre if v.cliente else "",
+            "cliente_rut": v.cliente.rut if v.cliente else "",
+        })
+    return JsonResponse(data, safe=False)

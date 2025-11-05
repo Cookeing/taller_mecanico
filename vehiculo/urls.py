@@ -1,22 +1,22 @@
 from django.urls import path
-from vehiculo import views as v
+from . import views
 
-app_name = "vehiculos"
+app_name = 'vehiculos'
 
 urlpatterns = [
-    path("", v.vehiculo_list, name="list"),
-    path("api/buscar/", v.buscar_vehiculos_api, name="api_buscar"),
-    path("api/buscar-por-cliente/", v.buscar_vehiculos_por_cliente_api, name="api_buscar_por_cliente"), 
-    path("nuevo/", v.vehiculo_create, name="create"),
-    path("<int:pk>/editar/", v.vehiculo_update, name="edit"),
-    path("<int:pk>/borrar/", v.vehiculo_delete, name="delete"),
-    path("<int:pk>/", v.vehiculo_detail, name="detail"),
-    path('servicios/', v.servicio_list, name='servicio_list'),
-    path('servicios/nuevo/', v.servicio_create, name='servicio_create'),
-    path('servicios/<int:pk>/editar/', v.servicio_update, name='servicio_update'),
-    path('servicios/<int:pk>/cotizaciones/', v.servicio_cotizaciones, name='servicio_cotizaciones'),
-    path('servicios/<int:servicio_id>/documentos/', v.documento_list, name='documento_list'),
-    path('servicios/<int:servicio_id>/documentos/subir/', v.documento_upload, name='documento_upload'),
-    path('documentos/<int:pk>/eliminar/', v.documento_delete, name='documento_delete'),
-    path('servicio/<int:servicio_id>/documentos/', v.documentos_servicio, name='documentos_servicio'),
+    # Vehículos
+    path('', views.vehiculo_list, name='list'),
+    path('nuevo/', views.vehiculo_create, name='create'),
+    path('<int:pk>/editar/', views.vehiculo_update, name='update'),
+    path('<int:pk>/eliminar/', views.vehiculo_delete, name='delete'),
+    path('<int:pk>/', views.vehiculo_detail, name='detail'),
+
+    # Documentos
+    path('servicios/<int:servicio_id>/documentos/', views.documentos_servicio, name='documentos_servicio'),
+    path('servicios/<int:servicio_id>/documentos/nuevo/', views.documento_upload, name='documento_upload'),
+    path('documentos/<int:pk>/eliminar/', views.documento_delete, name='documento_delete'),
+
+    # Búsquedas
+    path('api/buscar/', views.buscar_vehiculos_api, name='buscar_api'),
+    path('api/cliente/<int:cliente_id>/', views.buscar_vehiculos_por_cliente_api, name='buscar_por_cliente_api'),
 ]
