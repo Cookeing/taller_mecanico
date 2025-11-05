@@ -45,3 +45,30 @@ class Servicio(models.Model):
         verbose_name = 'Servicio'
         verbose_name_plural = 'Servicios'
         ordering = ['-fecha_servicio']
+
+
+class Documento(models.Model):
+    TIPO_DOCUMENTO = [
+        ('factura', 'Factura'),
+        ('boleta', 'Boleta'),
+        ('certificado', 'Certificado'),
+        ('presupuesto', 'Presupuesto'),
+        ('informe', 'Informe técnico'),
+        ('otro', 'Otro'),
+    ]
+
+    servicio = models.ForeignKey(
+        'servicios.Servicio',
+        on_delete=models.CASCADE,
+        related_name='documentos'
+    )
+    tipo_documento = models.CharField(max_length=50, choices=TIPO_DOCUMENTO, default='otro')
+    fecha_documento = models.DateField()
+    monto = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    archivo = models.FileField(upload_to='documentos/%Y/%m/%d/', blank=True, null=True)
+
+    class Meta:
+        ordering = ['-fecha_documento']
+
+    def __str__(self):
+        return f"{self.get_tipo_documento_display()} - {self.servicio.vehiculo.patente}"

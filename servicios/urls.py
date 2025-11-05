@@ -1,12 +1,17 @@
 from django.urls import path
-from . import views
+from servicios import views as v
 
 app_name = 'servicios'
 
 urlpatterns = [
-    path('', views.servicio_list, name='list'),
-    path('nuevo/', views.servicio_create, name='create'),
-    path('<int:pk>/editar/', views.servicio_update, name='update'),
-    path('<int:pk>/eliminar/', views.servicio_delete, name='delete'),
-    path('<int:pk>/cambiar_estado/', views.cambiar_estado_servicio, name='cambiar_estado'),
+    path('', v.servicio_list, name='list'),
+    path('nuevo/', v.servicio_create, name='create'),
+    path('<int:pk>/editar/', v.servicio_update, name='update'),
+    path('<int:pk>/eliminar/', v.servicio_delete, name='delete'),
+    path('<int:pk>/cambiar_estado/', v.cambiar_estado_servicio, name='cambiar_estado'),
+    
+    # Documentos
+    path('servicios/<int:servicio_id>/documentos/', v.documentos_servicio, name='documentos_servicio'),
+    path('servicios/<int:servicio_id>/documentos/nuevo/', v.documento_upload, name='documento_upload'),
+    path('documentos/<int:pk>/eliminar/', v.documento_delete, name='documento_delete'),
 ]

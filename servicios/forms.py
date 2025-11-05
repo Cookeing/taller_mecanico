@@ -1,6 +1,6 @@
 from django import forms
 from decimal import Decimal, InvalidOperation
-from .models import Servicio
+from .models import Documento, Servicio
 
 
 class ServicioForm(forms.ModelForm):
@@ -62,3 +62,27 @@ class ServicioForm(forms.ModelForm):
             raise forms.ValidationError("Use máximo 2 decimales.")
 
         return valor
+
+
+# class ServicioForm(forms.ModelForm):
+#     class Meta:
+#         model = Servicio
+#         fields = ['vehiculo', 'descripcion_trabajo', 'fecha_servicio', 'estado']
+#         widgets = {
+#             'vehiculo': forms.Select(attrs={'class': 'form-select'}),
+#             'descripcion_trabajo': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+#             'fecha_servicio': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+#             'estado': forms.Select(attrs={'class': 'form-select'}),
+#         }
+
+
+class DocumentoForm(forms.ModelForm):
+    class Meta:
+        model = Documento
+        fields = ['tipo_documento', 'fecha_documento', 'monto', 'archivo']
+        widgets = {
+            'fecha_documento': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'tipo_documento': forms.Select(attrs={'class': 'form-select'}),
+            'monto': forms.NumberInput(attrs={'class': 'form-control'}),
+            'archivo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }

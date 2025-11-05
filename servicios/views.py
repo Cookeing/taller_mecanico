@@ -1,6 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from .models import Servicio
+
+from servicios.forms import DocumentoForm
+from .models import Documento, Servicio
 from .forms import ServicioForm
 
 
@@ -116,3 +118,52 @@ def cambiar_estado_servicio(request, pk):
         messages.success(request, f"✅ Estado actualizado a: {servicio.get_estado_display()}.")
 
     return redirect('servicios:list')
+
+
+# ========== DOCUMENTOS DE UN SERVICIO ==========
+
+def documentos_servicio(request, servicio_id):
+    servicio = get_object_or_404(Servicio, id=servicio_id)
+    documentos = servicio.documentos.all().order_by('-fecha_documento')
+
+    if request.method == "POST":
+        form = DocumentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            doc = form.save(commit=False)
+            doc.servicio = servicio
+            doc.save()
+            messages.success(request, "Documento subido con éxito.")
+            return redirect("servicios:documentos_servicio", servicio_id=servicio.id)
+    else:
+        form = DocumentoForm()
+
+    return render(request, "vehiculos/documentos_servicio.html", {
+        "servicio": servicio,
+        "documentos": documentos,
+        "form": form,
+    })
+
+
+def documento_upload(request, servicio_id):
+    servicio = get_object_or_404(Servicio, pk=servicio_id)
+    if request.method == "POST":
+        form = DocumentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            doc = form.save(commit=False)
+            doc.servicio = servicio
+            doc.save()
+            messages.success(request, "Documento subido con éxito.")
+    return redirect("vehiculos:documentos_servicio", servicio_id=servicio.id)
+
+
+def documento_delete(request, pk):
+    documento = get_object_or_404(Documento, pk=pk)
+    servicio_id = documento.servicio.id
+    if request.method == "POST":
+        documento.delete()
+        messages.success(request, "Documento eliminado correctamente.")
+        return redirect("vehiculos:documentos_servicio", servicio_id=servicio_id)
+
+    return render(request, "vehiculos/documento_confirm_delete.html", {
+        "documento": documento,
+    })

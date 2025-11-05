@@ -4,11 +4,10 @@ from django.views.decorators.http import require_GET
 from django.db.models import Q
 from django.contrib import messages
 
-from .models import Vehiculo, Documento
-from .forms import VehiculoForm, DocumentoForm
+from .models import Vehiculo 
+from .forms import VehiculoForm
 from clientes.models import Cliente
 from clientes.forms import ClienteForm
-from servicios.models import Servicio
 
 
 def vehiculo_list(request):
@@ -88,53 +87,7 @@ def vehiculo_detail(request, pk):
     })
 
 
-# ========== DOCUMENTOS DE UN SERVICIO ==========
 
-def documentos_servicio(request, servicio_id):
-    servicio = get_object_or_404(Servicio, id=servicio_id)
-    documentos = servicio.documentos.all().order_by('-fecha_documento')
-
-    if request.method == "POST":
-        form = DocumentoForm(request.POST, request.FILES)
-        if form.is_valid():
-            doc = form.save(commit=False)
-            doc.servicio = servicio
-            doc.save()
-            messages.success(request, "Documento subido con éxito.")
-            return redirect("vehiculos:documentos_servicio", servicio_id=servicio.id)
-    else:
-        form = DocumentoForm()
-
-    return render(request, "vehiculos/documentos_servicio.html", {
-        "servicio": servicio,
-        "documentos": documentos,
-        "form": form,
-    })
-
-
-def documento_upload(request, servicio_id):
-    servicio = get_object_or_404(Servicio, pk=servicio_id)
-    if request.method == "POST":
-        form = DocumentoForm(request.POST, request.FILES)
-        if form.is_valid():
-            doc = form.save(commit=False)
-            doc.servicio = servicio
-            doc.save()
-            messages.success(request, "Documento subido con éxito.")
-    return redirect("vehiculos:documentos_servicio", servicio_id=servicio.id)
-
-
-def documento_delete(request, pk):
-    documento = get_object_or_404(Documento, pk=pk)
-    servicio_id = documento.servicio.id
-    if request.method == "POST":
-        documento.delete()
-        messages.success(request, "Documento eliminado correctamente.")
-        return redirect("vehiculos:documentos_servicio", servicio_id=servicio_id)
-
-    return render(request, "vehiculos/documento_confirm_delete.html", {
-        "documento": documento,
-    })
 
 
 # ========== APIs PARA LOS JS DE BÚSQUEDA ==========
