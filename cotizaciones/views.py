@@ -1,3 +1,5 @@
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.shortcuts import get_object_or_404, render, redirect
 from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
@@ -97,22 +99,50 @@ def RegistrarCotizacion(request):
     })
 
 def historial_cotizaciones(request):
-    # CORREGIDO: Eliminado 'vehiculo' del select_related
-    cotizaciones = Cotizacion.objects.all().select_related('cliente')
+    cotizaciones = Cotizacion.objects.all().select_related('cliente', 'servicio').order_by('-fecha_creacion')
 
     cliente = request.GET.get('cliente')
-    # CORREGIDO: Eliminado el filtro por patente
-    # patente = request.GET.get('patente')
+    estado = request.GET.get('estado')
 
     if cliente:
         cotizaciones = cotizaciones.filter(cliente__nombre__icontains=cliente)
-    # CORREGIDO: Eliminado el filtro por vehículo
-    # if patente:
-    #    cotizaciones = cotizaciones.filter(vehiculo__patente__icontains=patente)
+    if estado:
+        cotizaciones = cotizaciones.filter(estado_cotizacion=estado)
+
+    # Estadísticas para las tarjetas
+    cotizaciones_aprobadas = Cotizacion.objects.filter(estado_cotizacion='APROBADA').count()
+    cotizaciones_pendientes = Cotizacion.objects.filter(estado_cotizacion='PENDIENTE').count()
+
+    # Paginación
+    paginator = Paginator(cotizaciones, 10)  # 10 items por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     return render(request, 'cotizaciones/cotizacion_list.html', {
-        'cotizaciones': cotizaciones
+        'cotizaciones': page_obj,
+        'page_obj': page_obj,
+        'is_paginated': paginator.num_pages > 1,
+        'cotizaciones_aprobadas': cotizaciones_aprobadas,
+        'cotizaciones_pendientes': cotizaciones_pendientes,
     })
+
+# def historial_cotizaciones(request):
+#     # CORREGIDO: Eliminado 'vehiculo' del select_related
+#     cotizaciones = Cotizacion.objects.all().select_related('cliente')
+
+#     cliente = request.GET.get('cliente')
+#     # CORREGIDO: Eliminado el filtro por patente
+#     # patente = request.GET.get('patente')
+
+#     if cliente:
+#         cotizaciones = cotizaciones.filter(cliente__nombre__icontains=cliente)
+#     # CORREGIDO: Eliminado el filtro por vehículo
+#     # if patente:
+#     #    cotizaciones = cotizaciones.filter(vehiculo__patente__icontains=patente)
+
+#     return render(request, 'cotizaciones/cotizacion_list.html', {
+#         'cotizaciones': cotizaciones
+#     })
 
 # APIs para autorelleno (mantener solo la de cliente)
 @require_GET
@@ -139,6 +169,132 @@ def get_cliente_data(request, cliente_id):
 #     vehiculos = Vehiculo.objects.filter(cliente_id=cliente_id).values('id', 'patente', 'marca', 'modelo')
 #     return JsonResponse(list(vehiculos), safe=False)
 
+def EditarCotizacion(request, pk):
+    cotizacion = get_object_or_404(Cotizacion, pk=pk)
+    servicio = cotizacion.servicio
+    
+    if request.method == "POST":
+        form = CotizacionForm(request.POST, instance=cotizacion)
+        
+        if form.is_valid(): 
+            cotizacion = form.save(commit=False)
+            
+            # Procesar items (igual que en RegistrarCotizacion)
+            items_data_json = request.POST.get('items_data', '[]')
+            try:
+                items_data = json.loads(items_data_json)
+            except json.JSONDecodeError:
+                items_data = []
+                messages.error(request, "Error en los datos de los items.")
+                return render(request, "cotizaciones/cotizacion_form.html", {
+                    "form": form,
+                    "clientes": Cliente.objects.all(),
+                    "servicio": servicio,
+                })
+            
+            # Eliminar items existentes y crear nuevos
+            cotizacion.items.all().delete()
+            
+            subtotal = 0
+            for item_data in items_data:
+                cantidad = float(item_data.get('cantidad', 0))
+                precio_unitario = float(item_data.get('precio_unitario', 0))
+                subtotal += cantidad * precio_unitario
+                
+                ItemCotizacion.objects.create(
+                    cotizacion=cotizacion,
+                    categoria=item_data.get('categoria', 'Servicios'),
+                    descripcion=item_data.get('descripcion', ''),
+                    cantidad=cantidad,
+                    precio_unitario=precio_unitario
+                )
+            
+            # Actualizar totales
+            cotizacion.subtotal = subtotal
+            cotizacion.save()
+            
+            messages.success(request, "Cotización actualizada exitosamente.")    
+            return redirect("cotizaciones:listar_cotizaciones")
+        else:
+            messages.error(request, "Error al actualizar la cotización.") 
+    else:
+        form = CotizacionForm(instance=cotizacion)
+    
+    clientes = Cliente.objects.all()
+    
+    return render(request, "cotizaciones/cotizacion_form.html", {
+        "form": form,
+        "clientes": clientes,
+        "servicio": servicio,
+    })
+
+# Vista para duplicar cotización
+def DuplicarCotizacion(request, pk):
+    cotizacion_original = get_object_or_404(Cotizacion, pk=pk)
+    
+    if request.method == "POST":
+        form = CotizacionForm(request.POST)
+        
+        if form.is_valid(): 
+            nueva_cotizacion = form.save(commit=False)
+            nueva_cotizacion.numero_cotizacion = ''  # Para generar nuevo número
+            nueva_cotizacion.estado_cotizacion = 'PENDIENTE'
+            nueva_cotizacion.save()
+            
+            # Copiar items
+            for item in cotizacion_original.items.all():
+                ItemCotizacion.objects.create(
+                    cotizacion=nueva_cotizacion,
+                    categoria=item.categoria,
+                    descripcion=item.descripcion,
+                    cantidad=item.cantidad,
+                    precio_unitario=item.precio_unitario
+                )
+            
+            messages.success(request, "Cotización duplicada exitosamente.")    
+            return redirect("cotizaciones:listar_cotizaciones")
+    else:
+        # Pre-cargar datos de la cotización original
+        initial_data = {
+            'empresa_nombre': cotizacion_original.empresa_nombre,
+            'empresa_rut': cotizacion_original.empresa_rut,
+            'empresa_giro': cotizacion_original.empresa_giro,
+            'empresa_direccion': cotizacion_original.empresa_direccion,
+            'empresa_telefono': cotizacion_original.empresa_telefono,
+            'empresa_email': cotizacion_original.empresa_email,
+            'fecha_emision': timezone.now().date(),
+            'fecha_validez': (timezone.now() + timedelta(days=30)).date(),
+            'cliente': cotizacion_original.cliente,
+            'forma_pago': cotizacion_original.forma_pago,
+            'plazo_pago': cotizacion_original.plazo_pago,
+        }
+        form = CotizacionForm(initial=initial_data)
+    
+    clientes = Cliente.objects.all()
+    
+    return render(request, "cotizaciones/cotizacion_form.html", {
+        "form": form,
+        "clientes": clientes,
+        "servicio": cotizacion_original.servicio,
+    })
+    
+def EliminarCotizacion(request, pk):
+    cotizacion = get_object_or_404(Cotizacion, pk=pk)
+    
+    if request.method == "POST":
+        numero_cotizacion = cotizacion.numero_cotizacion
+        cotizacion.delete()
+        messages.success(request, f"Cotización {numero_cotizacion} eliminada exitosamente.")
+        return redirect("cotizaciones:listar_cotizaciones")
+    
+    return redirect("cotizaciones:listar_cotizaciones")
+
+def VerPDF(request, pk):
+    cotizacion = get_object_or_404(Cotizacion, pk=pk)
+    # Por ahora redirige a la vista de edición
+    # Más adelante puedes implementar la generación de PDF
+    messages.info(request, "Funcionalidad de PDF en desarrollo.")
+    return redirect("cotizaciones:editar_cotizacion", pk=pk)
 #$$ esta vista dara al boton de ver el historial la posibilidad de descargar y poder generar el pdf que se creo en utlis.py
 def descargar_pdf_cotizacion(request, cotizacion_id):
     
