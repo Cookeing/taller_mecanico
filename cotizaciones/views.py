@@ -193,6 +193,7 @@ def EditarCotizacion(request, pk):
                     "form": form,
                     "clientes": Cliente.objects.all(),
                     "servicio": servicio,
+                    "items_existentes": json.dumps([]),
                 })
             
             # Eliminar items existentes y crear nuevos
@@ -222,6 +223,16 @@ def EditarCotizacion(request, pk):
             messages.error(request, "Error al actualizar la cotización.") 
     else:
         form = CotizacionForm(instance=cotizacion)
+        
+        # Preparar items existentes para el template
+        items_existentes = []
+        for item in cotizacion.items.all():
+            items_existentes.append({
+                'categoria': item.categoria,
+                'descripcion': item.descripcion,
+                'cantidad': float(item.cantidad),
+                'precio_unitario': float(item.precio_unitario)
+            })
     
     clientes = Cliente.objects.all()
     
@@ -229,6 +240,8 @@ def EditarCotizacion(request, pk):
         "form": form,
         "clientes": clientes,
         "servicio": servicio,
+        "items_existentes": json.dumps(items_existentes) if 'items_existentes' in locals() else json.dumps([]),
+        "editando": True,
     })
 
 # Vista para duplicar cotización

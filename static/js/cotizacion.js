@@ -117,6 +117,9 @@ function addCategory() {
     
     // Add 1 initial row
     addRowToCategory(categoryCounter);
+    
+    // Retornar el elemento creado
+    return categoryWrapper;
 }
 
 function addRowToCategory(categoryId) {
