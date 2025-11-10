@@ -72,3 +72,22 @@ class Documento(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_documento_display()} - {self.servicio.vehiculo.patente}"
+
+
+class FotoServicio(models.Model):
+    servicio = models.ForeignKey(
+        'servicios.Servicio',
+        on_delete=models.CASCADE,
+        related_name='fotos'
+    )
+    imagen = models.ImageField(upload_to='servicios/fotos/%Y/%m/%d/')
+    descripcion = models.CharField(max_length=255, blank=True, null=True)
+    fecha_captura = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-fecha_captura']
+        verbose_name = 'Foto de Servicio'
+        verbose_name_plural = 'Fotos de Servicios'
+
+    def __str__(self):
+        return f"Foto - Servicio #{self.servicio.id} - {self.servicio.vehiculo.patente}"

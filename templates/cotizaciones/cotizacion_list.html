@@ -146,12 +146,29 @@
             </span>
           </td>
           <td>
-            <!-- se agrego esto para ver si funciona la descarga de pdf -->
-              <a href="{% url 'cotizaciones:descargar_pdf' cot.id %}" 
-              class="btn btn-sm btn-outline-primary" 
-              target="_blank">
-                Ver PDF insanismo
-    </a>
+            <!-- Botón Ver PDF -->
+            <a href="{% url 'cotizaciones:descargar_pdf' cot.id %}" 
+               class="btn btn-sm btn-outline-primary mb-1" 
+               target="_blank"
+               title="Ver PDF">
+              <i class="bi bi-file-pdf"></i> PDF
+            </a>
+            
+            <!-- Botón Enviar por Email -->
+            {% if cot.cliente.email %}
+            <a href="{% url 'cotizaciones:enviar_email' cot.id %}" 
+               class="btn btn-sm btn-outline-success mb-1"
+               onclick="return confirm('¿Enviar cotización a {{ cot.cliente.email }}?');"
+               title="Enviar por email a {{ cot.cliente.email }}">
+              <i class="bi bi-envelope"></i> Email
+            </a>
+            {% else %}
+            <button class="btn btn-sm btn-outline-secondary mb-1" 
+                    disabled
+                    title="El cliente no tiene email registrado">
+              <i class="bi bi-envelope-slash"></i> Sin email
+            </button>
+            {% endif %}
           </td>
         </tr>
         {% empty %}

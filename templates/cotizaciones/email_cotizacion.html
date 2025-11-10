@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotización {{ cotizacion.numero_cotizacion }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #343a40;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f8f9fa;
+            padding: 30px;
+            border: 1px solid #dee2e6;
+        }
+        .footer {
+            background-color: #e9ecef;
+            padding: 15px;
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d;
+            border-radius: 0 0 5px 5px;
+        }
+        .info-box {
+            background-color: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #007bff;
+            border-radius: 3px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .details {
+            margin: 20px 0;
+        }
+        .details-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .label {
+            font-weight: bold;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ cotizacion.empresa_nombre|default:"Taller Mecánico" }}</h1>
+        <p>Cotización N° {{ cotizacion.numero_cotizacion }}</p>
+    </div>
+    
+    <div class="content">
+        <p>Estimado/a <strong>{{ cotizacion.cliente.nombre }}</strong>,</p>
+        
+        <p>Nos complace enviarle la cotización solicitada para los servicios de mantenimiento y reparación de su vehículo.</p>
+        
+        <div class="info-box">
+            <h3 style="margin-top: 0; color: #007bff;">Detalles de la Cotización</h3>
+            <div class="details">
+                <div class="details-row">
+                    <span class="label">Número de Cotización:</span>
+                    <span>{{ cotizacion.numero_cotizacion }}</span>
+                </div>
+                <div class="details-row">
+                    <span class="label">Fecha de Emisión:</span>
+                    <span>{{ cotizacion.fecha_emision|date:"d/m/Y" }}</span>
+                </div>
+                {% if cotizacion.fecha_validez %}
+                <div class="details-row">
+                    <span class="label">Válida hasta:</span>
+                    <span>{{ cotizacion.fecha_validez|date:"d/m/Y" }}</span>
+                </div>
+                {% endif %}
+                {% if cotizacion.servicio %}
+                <div class="details-row">
+                    <span class="label">Vehículo:</span>
+                    <span>{{ cotizacion.servicio.vehiculo.patente }} - {{ cotizacion.servicio.vehiculo.marca }} {{ cotizacion.servicio.vehiculo.modelo }}</span>
+                </div>
+                {% endif %}
+                <div class="details-row">
+                    <span class="label">Forma de Pago:</span>
+                    <span>{{ cotizacion.get_forma_pago_display }}</span>
+                </div>
+                <div class="details-row">
+                    <span class="label">Plazo de Pago:</span>
+                    <span>{{ cotizacion.get_plazo_pago_display }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <h3 style="margin-top: 0; color: #28a745;">Resumen de Costos</h3>
+            <div class="details">
+                <div class="details-row">
+                    <span class="label">Subtotal:</span>
+                    <span>${{ cotizacion.subtotal|floatformat:0 }}</span>
+                </div>
+                <div class="details-row">
+                    <span class="label">IVA (19%):</span>
+                    <span>${{ cotizacion.iva|floatformat:0 }}</span>
+                </div>
+                <div class="details-row" style="border-top: 2px solid #28a745; font-size: 18px; font-weight: bold;">
+                    <span class="label">Total:</span>
+                    <span>${{ cotizacion.monto_total|floatformat:0 }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <p>Adjunto a este correo encontrará el documento PDF con el detalle completo de la cotización.</p>
+        
+        <p>Si tiene alguna consulta o requiere información adicional, no dude en contactarnos.</p>
+        
+        <p>Quedamos atentos a su respuesta.</p>
+        
+        <p style="margin-top: 30px;">
+            <strong>Saludos cordiales,</strong><br>
+            <strong>{{ cotizacion.empresa_nombre|default:"Taller Mecánico" }}</strong><br>
+            {% if cotizacion.empresa_telefono %}Teléfono: {{ cotizacion.empresa_telefono }}<br>{% else %}Teléfono: +56 9 41042001<br>{% endif %}
+            Email: tallermecanicoteam06@gmail.com<br>
+            {% if cotizacion.empresa_direccion %}{{ cotizacion.empresa_direccion }}{% else %}Mac-iver 211{% endif %}
+        </p>
+    </div>
+    
+    <div class="footer">
+        <p>Este es un correo automático, por favor no responda a esta dirección.</p>
+        <p>Para consultas, contacte a tallermecanicoteam06@gmail.com</p>
+    </div>
+</body>
+</html>

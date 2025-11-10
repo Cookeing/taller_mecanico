@@ -7,6 +7,9 @@ from django.views.decorators.http import require_GET
 from django.utils import timezone
 from datetime import timedelta
 import json
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+from django.conf import settings
 
 from servicios.models import Servicio
 from .models import Cotizacion, ItemCotizacion
@@ -312,3 +315,62 @@ def descargar_pdf_cotizacion(request, cotizacion_id):
     response.write(buffer.getvalue())
     
     return response
+
+
+def enviar_cotizacion_email(request, cotizacion_id):
+    """Vista para enviar cotización por email con PDF adjunto"""
+    cotizacion = get_object_or_404(
+        Cotizacion.objects.select_related('cliente', 'servicio__vehiculo').prefetch_related('items'),
+        id=cotizacion_id
+    )
+    
+    # Verificar que el cliente tenga email
+    if not cotizacion.cliente or not cotizacion.cliente.email:
+        messages.error(request, "El cliente no tiene un email registrado.")
+        return redirect('cotizaciones:listar_cotizaciones')
+    
+    try:
+        # Generar PDF
+        buffer = generar_pdf_cotizacion(cotizacion)
+        
+        # Renderizar template de email
+        html_content = render_to_string('cotizaciones/email_cotizacion.html', {
+            'cotizacion': cotizacion,
+        })
+        
+        # Crear asunto del email
+        asunto = f"Cotización N° {cotizacion.numero_cotizacion} - {cotizacion.empresa_nombre or 'Taller Mecánico'}"
+        
+        # Crear email
+        email = EmailMessage(
+            subject=asunto,
+            body=html_content,
+            from_email=settings.DEFAULT_FROM_EMAIL or settings.EMAIL_HOST_USER,
+            to=[cotizacion.cliente.email],
+        )
+        
+        # Configurar email como HTML
+        email.content_subtype = "html"
+        
+        # Adjuntar PDF
+        email.attach(
+            f'cotizacion_{cotizacion.numero_cotizacion}.pdf',
+            buffer.getvalue(),
+            'application/pdf'
+        )
+        
+        # Enviar email
+        email.send(fail_silently=False)
+        
+        messages.success(
+            request, 
+            f"Cotización enviada exitosamente a {cotizacion.cliente.email}"
+        )
+        
+    except Exception as e:
+        messages.error(
+            request, 
+            f"Error al enviar el email: {str(e)}"
+        )
+    
+    return redirect('cotizaciones:listar_cotizaciones')

@@ -1,6 +1,6 @@
 from django import forms
 from decimal import Decimal, InvalidOperation
-from .models import Documento, Servicio
+from .models import Documento, Servicio, FotoServicio
 
 
 class ServicioForm(forms.ModelForm):
@@ -86,3 +86,16 @@ class DocumentoForm(forms.ModelForm):
             'monto': forms.NumberInput(attrs={'class': 'form-control'}),
             'archivo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
+
+
+class FotoServicioForm(forms.Form):
+    """Formulario para subir múltiples fotos a un servicio"""
+    descripcion = forms.CharField(
+        label='Descripción (opcional)',
+        max_length=255,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ej: Estado del motor, Rayones en puerta, etc.'
+        })
+    )

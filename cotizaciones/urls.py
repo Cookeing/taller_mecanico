@@ -14,4 +14,5 @@ urlpatterns = [
     path('listar/', v.historial_cotizaciones, name='listar_cotizaciones'),
     #nueva ruta qu e genera el pdf eliminaren proximas v solo uso para testeo 
     path("pdf/<int:cotizacion_id>/", v.descargar_pdf_cotizacion, name="descargar_pdf"),
+    path("email/<int:cotizacion_id>/", v.enviar_cotizacion_email, name="enviar_email"),
 ]

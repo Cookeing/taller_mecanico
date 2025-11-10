@@ -132,3 +132,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Email configuration
+# Configuración para envío de emails reales con Gmail
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'tallermecanicoteam06@gmail.com'
+EMAIL_HOST_PASSWORD = 'bjus fxdm cjtt iukq'
+DEFAULT_FROM_EMAIL = 'tallermecanicoteam06@gmail.com'
+
+# Para desarrollo/pruebas en consola, comentar lo de arriba y descomentar:
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

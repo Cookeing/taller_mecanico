@@ -38,6 +38,8 @@
           <th>Descripción</th>
           <th class="text-center">Estado</th>
           <th class="text-end">Total</th>
+          <th class="text-center">Fotos</th>
+          <th class="text-center">Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -48,8 +50,8 @@
           <td class="text-center">
             {% if s.estado == "proceso" %}
             <span class="badge bg-warning text-dark">En proceso</span>
-            {% elif s.estado == "finalizado" %}
-            <span class="badge bg-success">Finalizado</span>
+            {% elif s.estado == "completado" %}
+            <span class="badge bg-success">Completado</span>
             {% elif s.estado == "pendiente" %}
             <span class="badge bg-secondary">Pendiente</span>
             {% elif s.estado == "cancelado" %}
@@ -63,7 +65,67 @@
           <td class="text-end fw-bold">
             ${{ s.total|floatformat:0|intcomma }}
           </td>
+          <td class="text-center">
+            <span class="badge bg-info">{{ s.fotos.count }}</span>
+          </td>
+          <td class="text-center">
+            <a href="{% url 'servicios:fotos_servicio' s.id %}" class="btn btn-sm btn-primary" title="Ver y gestionar fotos">
+              <i class="bi bi-camera"></i> Subir Fotos
+            </a>
+          </td>
         </tr>
+        
+        <!-- Galería de fotos debajo del servicio -->
+        {% if s.fotos.exists %}
+        <tr>
+          <td colspan="6" class="bg-light">
+            <div class="p-2">
+              <h6 class="mb-2"><i class="bi bi-images"></i> Fotos del Servicio</h6>
+              <div class="row g-2">
+                {% for foto in s.fotos.all|slice:":6" %}
+                  <div class="col-6 col-md-2">
+                    <img src="{{ foto.imagen.url }}" 
+                         class="img-thumbnail" 
+                         alt="Foto del servicio" 
+                         style="height: 100px; width: 100%; object-fit: cover; cursor: pointer;"
+                         data-bs-toggle="modal" 
+                         data-bs-target="#fotoModal{{ foto.id }}">
+                  </div>
+                  
+                  <!-- Modal para ver foto en grande -->
+                  <div class="modal fade" id="fotoModal{{ foto.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title">{{ foto.descripcion|default:"Foto del Servicio" }}</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                          <img src="{{ foto.imagen.url }}" class="img-fluid" alt="Foto del servicio">
+                          <p class="text-muted mt-2">
+                            <i class="bi bi-calendar"></i> {{ foto.fecha_captura|date:"d/m/Y H:i" }}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+                
+                {% if s.fotos.count > 6 %}
+                  <div class="col-6 col-md-2">
+                    <a href="{% url 'servicios:fotos_servicio' s.id %}" class="d-flex align-items-center justify-content-center text-decoration-none" style="height: 100px; background-color: #e9ecef; border-radius: 4px;">
+                      <span class="text-center">
+                        <i class="bi bi-plus-circle" style="font-size: 2rem;"></i><br>
+                        <small>+{{ s.fotos.count|add:"-6" }} más</small>
+                      </span>
+                    </a>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </td>
+        </tr>
+        {% endif %}
         {% endfor %}
       </tbody>
     </table>

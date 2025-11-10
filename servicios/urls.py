@@ -14,4 +14,8 @@ urlpatterns = [
     path('servicios/<int:servicio_id>/documentos/', v.documentos_servicio, name='documentos_servicio'),
     path('servicios/<int:servicio_id>/documentos/nuevo/', v.documento_upload, name='documento_upload'),
     path('documentos/<int:pk>/eliminar/', v.documento_delete, name='documento_delete'),
+    
+    # Fotos
+    path('servicios/<int:servicio_id>/fotos/', v.fotos_servicio, name='fotos_servicio'),
+    path('fotos/<int:pk>/eliminar/', v.foto_delete, name='foto_delete'),
 ]

@@ -1,8 +1,12 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
+from PIL import Image
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
+import sys
 
-from servicios.forms import DocumentoForm
-from .models import Documento, Servicio
+from servicios.forms import DocumentoForm, FotoServicioForm
+from .models import Documento, Servicio, FotoServicio
 from .forms import ServicioForm
 
 
@@ -166,4 +170,100 @@ def documento_delete(request, pk):
 
     return render(request, "vehiculos/documento_confirm_delete.html", {
         "documento": documento,
+    })
+
+
+# ========== FOTOS DE SERVICIOS ==========
+
+def optimizar_imagen(imagen, max_width=1920, max_height=1080, quality=85):
+    """Optimiza una imagen redimensionándola y ajustando su calidad"""
+    img = Image.open(imagen)
+    
+    # Convertir RGBA a RGB si es necesario (para PNGs con transparencia)
+    if img.mode in ('RGBA', 'LA', 'P'):
+        background = Image.new('RGB', img.size, (255, 255, 255))
+        if img.mode == 'P':
+            img = img.convert('RGBA')
+        background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+        img = background
+    
+    # Redimensionar manteniendo aspect ratio
+    img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+    
+    # Guardar en buffer
+    output = BytesIO()
+    img.save(output, format='JPEG', quality=quality, optimize=True)
+    output.seek(0)
+    
+    return output
+
+
+def fotos_servicio(request, servicio_id):
+    """Vista para subir y mostrar fotos de un servicio"""
+    servicio = get_object_or_404(Servicio, id=servicio_id)
+    fotos = servicio.fotos.all().order_by('-fecha_captura')
+    
+    if request.method == 'POST':
+        form = FotoServicioForm(request.POST, request.FILES)
+        if form.is_valid():
+            imagenes = request.FILES.getlist('imagenes')
+            descripcion = form.cleaned_data.get('descripcion', '')
+            
+            fotos_guardadas = 0
+            for imagen in imagenes:
+                try:
+                    # Optimizar imagen
+                    imagen_optimizada = optimizar_imagen(imagen)
+                    
+                    # Crear nombre de archivo
+                    nombre_archivo = imagen.name
+                    
+                    # Crear objeto InMemoryUploadedFile
+                    imagen_file = InMemoryUploadedFile(
+                        imagen_optimizada,
+                        'ImageField',
+                        nombre_archivo,
+                        'image/jpeg',
+                        sys.getsizeof(imagen_optimizada),
+                        None
+                    )
+                    
+                    # Guardar foto
+                    foto = FotoServicio(
+                        servicio=servicio,
+                        imagen=imagen_file,
+                        descripcion=descripcion
+                    )
+                    foto.save()
+                    fotos_guardadas += 1
+                    
+                except Exception as e:
+                    messages.error(request, f"Error al procesar {imagen.name}: {str(e)}")
+            
+            if fotos_guardadas > 0:
+                messages.success(request, f"✅ {fotos_guardadas} foto(s) subida(s) exitosamente.")
+            
+            return redirect('servicios:fotos_servicio', servicio_id=servicio.id)
+    else:
+        form = FotoServicioForm()
+    
+    return render(request, 'servicios/fotos_servicio.html', {
+        'servicio': servicio,
+        'fotos': fotos,
+        'form': form
+    })
+
+
+def foto_delete(request, pk):
+    """Elimina una foto de servicio"""
+    foto = get_object_or_404(FotoServicio, pk=pk)
+    servicio_id = foto.servicio.id
+    
+    if request.method == 'POST':
+        foto.delete()
+        messages.success(request, "🗑️ Foto eliminada correctamente.")
+        return redirect('servicios:fotos_servicio', servicio_id=servicio_id)
+    
+    return render(request, 'servicios/foto_confirm_delete.html', {
+        'foto': foto
     })
