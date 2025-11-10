@@ -144,27 +144,27 @@
                 <div class="client-grid">
                     <div class="form-group full-width">
                         <label class="form-label">Nombre o Razón Social</label>
-                        <input type="text" class="form-input" id="ui-client-name" placeholder="Nombre completo o razón social del cliente (opcional)">
+                        <input type="text" class="form-input" id="ui-client-name" placeholder="Nombre completo o razón social del cliente (opcional)" readonly>
                     </div>
                     <div class="form-group">
                         <label class="form-label">RUT</label>
-                        <input type="text" class="form-input" id="ui-client-rut" placeholder="12.345.678-9 (opcional)">
+                        <input type="text" class="form-input" id="ui-client-rut" placeholder="12.345.678-9 (opcional)" readonly>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Teléfono</label>
-                        <input type="text" class="form-input" id="ui-client-phone" placeholder="+56 9 1234 5678 (opcional)">
+                        <input type="text" class="form-input" id="ui-client-phone" placeholder="+56 9 1234 5678 (opcional)" readonly>
                     </div>
                     <div class="form-group full-width">
                         <label class="form-label">Dirección Completa</label>
-                        <input type="text" class="form-input" id="ui-client-address" placeholder="Calle, Número, Comuna, Ciudad, Región (opcional)">
+                        <input type="text" class="form-input" id="ui-client-address" placeholder="Calle, Número, Comuna, Ciudad, Región (opcional)" readonly>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Correo Electrónico</label>
-                        <input type="text" class="form-input" id="ui-client-email" placeholder="cliente@email.cl (opcional)">
+                        <input type="text" class="form-input" id="ui-client-email" placeholder="cliente@email.cl (opcional)" readonly>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Contacto</label>
-                        <input type="text" class="form-input" id="ui-client-contact" placeholder="Nombre de persona de contacto (opcional)">
+                        <input type="text" class="form-input" id="ui-client-contact" placeholder="Nombre de persona de contacto (opcional)" readonly>
                     </div>
                 </div>
             </div>
@@ -256,182 +256,56 @@
     <script>
         // Inicialización específica para Django
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('=== Iniciando cotización ===');
+            console.log('Inicializando cotización...');
             
-            // Verificar que las funciones estén disponibles
-            console.log('Función addCategory disponible:', typeof addCategory);
-            console.log('Función calculateGrandTotal disponible:', typeof calculateGrandTotal);
-            
-            // Cargar items existentes si estamos editando
-            {% if editando and items_existentes %}
-            const itemsExistentes = {{ items_existentes|safe }};
-            console.log('MODO EDICIÓN - Items existentes:', itemsExistentes);
-            
-            if (itemsExistentes && itemsExistentes.length > 0) {
-                // Agrupar items por categoría
-                const itemsPorCategoria = {};
-                itemsExistentes.forEach(item => {
-                    if (!itemsPorCategoria[item.categoria]) {
-                        itemsPorCategoria[item.categoria] = [];
-                    }
-                    itemsPorCategoria[item.categoria].push(item);
-                });
-                
-                console.log('Items agrupados por categoría:', itemsPorCategoria);
-                
-                // Crear una categoría por cada grupo
-                Object.keys(itemsPorCategoria).forEach(nombreCategoria => {
-                    console.log('Creando categoría:', nombreCategoria);
-                    const nuevaCategoria = addCategory();
-                    
-                    if (nuevaCategoria) {
-                        // Establecer nombre de categoría
-                        const categoryNameInput = nuevaCategoria.querySelector('.category-name-input');
-                        if (categoryNameInput) {
-                            categoryNameInput.value = nombreCategoria;
-                        }
-                        
-                        // Obtener el tbody de esta categoría
-                        const tbody = nuevaCategoria.querySelector('.category-body');
-                        if (tbody) {
-                            tbody.innerHTML = ''; // Limpiar la fila por defecto
-                            
-                            // Agregar cada item de esta categoría
-                            itemsPorCategoria[nombreCategoria].forEach((item, index) => {
-                                console.log('Agregando item:', item);
-                                const row = document.createElement('tr');
-                                row.innerHTML = `
-                                    <td class="item-number">${index + 1}</td>
-                                    <td class="description-cell"><input type="text" placeholder="Descripción del servicio" value="${item.descripcion}"></td>
-                                    <td class="unit-cell">
-                                        <select>
-                                            <option value="un">Unidad</option>
-                                            <option value="hr">Hora</option>
-                                            <option value="servicio">Servicio</option>
-                                        </select>
-                                    </td>
-                                    <td class="quantity-cell"><input type="number" class="quantity" value="${item.cantidad}" min="0" step="0.01"></td>
-                                    <td class="unit-price-cell"><input type="number" class="unit-price" value="${item.precio_unitario}" min="0" step="1"></td>
-                                    <td class="total-cell"><input type="text" class="row-total" value="$${Math.round(item.cantidad * item.precio_unitario)}" readonly></td>
-                                    <td class="actions-cell">
-                                        <button type="button" class="delete-row-btn" onclick="deleteRow(this)">✕</button>
-                                    </td>
-                                `;
-                                tbody.appendChild(row);
-                                
-                                // Event listeners para recalcular
-                                const quantityInput = row.querySelector('.quantity');
-                                const priceInput = row.querySelector('.unit-price');
-                                
-                                if (quantityInput) {
-                                    quantityInput.addEventListener('input', function() {
-                                        calculateRow(this);
-                                    });
-                                }
-                                
-                                if (priceInput) {
-                                    priceInput.addEventListener('input', function() {
-                                        calculateRow(this);
-                                    });
-                                }
-                            });
-                            
-                            // Recalcular totales
-                            calculateGrandTotal();
-                        }
-                    }
-                });
-                
-                console.log('Items cargados correctamente');
-            } else {
-                console.log('No hay items, creando categoría vacía');
-                addCategory();
-            }
-            {% else %}
-            console.log('MODO NUEVA COTIZACIÓN - Creando categoría inicial');
+            // 1. INICIALIZAR PRIMERA CATEGORÍA
             addCategory();
-            {% endif %}
+            console.log('Categoría inicial creada');
 
             // 2. Sincronizar datos de cliente si ya hay uno seleccionado
             const clienteSelect = document.getElementById('ui-cliente-select');
-            console.log('Cliente select encontrado:', clienteSelect);
-            console.log('Valor del cliente select:', clienteSelect ? clienteSelect.value : 'N/A');
-            
-            if (clienteSelect && clienteSelect.value) {
-                console.log('Cliente ya seleccionado, cargando datos...');
+            if (clienteSelect.value) {
                 const selectedOption = clienteSelect.options[clienteSelect.selectedIndex];
-                console.log('Opción seleccionada:', selectedOption);
-                
-                if (selectedOption && selectedOption.value) {
-                    const nombre = selectedOption.text.split(' (')[0];
-                    const rut = selectedOption.dataset.rut || '';
-                    const telefono = selectedOption.dataset.telefono || '';
-                    const direccion = selectedOption.dataset.direccion || '';
-                    const email = selectedOption.dataset.email || '';
-                    const contacto = selectedOption.dataset.contacto || '';
-                    
-                    console.log('Datos a cargar:', {nombre, rut, telefono, direccion, email, contacto});
-                    
-                    document.getElementById('ui-client-name').value = nombre;
-                    document.getElementById('ui-client-rut').value = rut;
-                    document.getElementById('ui-client-phone').value = telefono;
-                    document.getElementById('ui-client-address').value = direccion;
-                    document.getElementById('ui-client-email').value = email;
-                    document.getElementById('ui-client-contact').value = contacto;
-                    
-                    console.log('Datos del cliente cargados correctamente');
+                if (selectedOption.value) {
+                    document.getElementById('ui-client-name').value = selectedOption.text.split(' (')[0];
+                    document.getElementById('ui-client-rut').value = selectedOption.dataset.rut || '';
+                    document.getElementById('ui-client-phone').value = selectedOption.dataset.telefono || '';
+                    document.getElementById('ui-client-address').value = selectedOption.dataset.direccion || '';
+                    document.getElementById('ui-client-email').value = selectedOption.dataset.email || '';
+                    document.getElementById('ui-client-contact').value = selectedOption.dataset.contacto || '';
                 }
             }
 
             // 3. Event listeners
-            const addCategoryBtn = document.getElementById('add-category-btn');
-            if (addCategoryBtn) {
-                addCategoryBtn.addEventListener('click', function() {
-                    console.log('Agregando categoría...');
-                    addCategory();
-                });
-            } else {
-                console.error('Botón add-category-btn no encontrado');
-            }
+            document.getElementById('add-category-btn').addEventListener('click', function() {
+                console.log('Agregando categoría...');
+                addCategory();
+            });
 
-            const btnImprimir = document.getElementById('btn-imprimir');
-            if (btnImprimir) {
-                btnImprimir.addEventListener('click', printQuote);
-            }
-
-            const btnExportar = document.getElementById('btn-exportar');
-            if (btnExportar) {
-                btnExportar.addEventListener('click', exportToCSV);
-            }
+            document.getElementById('btn-imprimir').addEventListener('click', printQuote);
+            document.getElementById('btn-exportar').addEventListener('click', exportToCSV);
 
             // 4. Cliente selection
-            if (clienteSelect) {
-                clienteSelect.addEventListener('change', function() {
-                    const selectedOption = this.options[this.selectedIndex];
-                    
-                    if (selectedOption.value) {
-                        document.getElementById('ui-client-name').value = selectedOption.text.split(' (')[0];
-                        document.getElementById('ui-client-rut').value = selectedOption.dataset.rut || '';
-                        document.getElementById('ui-client-phone').value = selectedOption.dataset.telefono || '';
-                        document.getElementById('ui-client-address').value = selectedOption.dataset.direccion || '';
-                        document.getElementById('ui-client-email').value = selectedOption.dataset.email || '';
-                        document.getElementById('ui-client-contact').value = selectedOption.dataset.contacto || '';
-                    } else {
-                        clearClientFields();
-                    }
-                });
-            }
+            document.getElementById('ui-cliente-select').addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                
+                if (selectedOption.value) {
+                    document.getElementById('ui-client-name').value = selectedOption.text.split(' (')[0];
+                    document.getElementById('ui-client-rut').value = selectedOption.dataset.rut || '';
+                    document.getElementById('ui-client-phone').value = selectedOption.dataset.telefono || '';
+                    document.getElementById('ui-client-address').value = selectedOption.dataset.direccion || '';
+                    document.getElementById('ui-client-email').value = selectedOption.dataset.email || '';
+                    document.getElementById('ui-client-contact').value = selectedOption.dataset.contacto || '';
+                } else {
+                    clearClientFields();
+                }
+            });
 
             // 5. Botón guardar - SOLO ESTE ENVÍA EL FORMULARIO
-            const btnGuardar = document.getElementById('btn-guardar');
-            if (btnGuardar) {
-                btnGuardar.addEventListener('click', function() {
-                    console.log('Preparando y enviando formulario...');
-                    prepararYEnviarFormulario();
-                });
-            } else {
-                console.error('Botón btn-guardar no encontrado');
-            }
+            document.getElementById('btn-guardar').addEventListener('click', function() {
+                console.log('Preparando y enviando formulario...');
+                prepararYEnviarFormulario();
+            });
 
             console.log('Inicialización completada');
         });

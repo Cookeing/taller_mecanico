@@ -142,3 +142,6 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'tallermecanicoteam06@gmail.com'
 EMAIL_HOST_PASSWORD = 'bjus fxdm cjtt iukq'
 DEFAULT_FROM_EMAIL = 'tallermecanicoteam06@gmail.com'
+
+# Para desarrollo/pruebas en consola, comentar lo de arriba y descomentar:
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
