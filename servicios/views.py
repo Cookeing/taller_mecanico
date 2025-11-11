@@ -162,7 +162,7 @@ def documento_upload(request, servicio_id):
             doc.servicio = servicio
             doc.save()
             messages.success(request, "Documento subido con éxito.")
-    return redirect("vehiculos:documentos_servicio", servicio_id=servicio.id)
+    return redirect("servicios:documentos_servicio", servicio_id=servicio.id)
 
 
 def documento_delete(request, pk):
@@ -171,9 +171,9 @@ def documento_delete(request, pk):
     if request.method == "POST":
         documento.delete()
         messages.success(request, "Documento eliminado correctamente.")
-        return redirect("vehiculos:documentos_servicio", servicio_id=servicio_id)
+        return redirect("servicios:documentos_servicio", servicio_id=servicio_id)
 
-    return render(request, "vehiculos/documento_confirm_delete.html", {
+    return render(request, "servicios/documento_confirm_delete.html", {
         "documento": documento,
     })
 
