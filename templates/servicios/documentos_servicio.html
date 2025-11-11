@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'servicios:list' %}"><i class="bi bi-wrench"></i> Servicios</a></li>
+      <li class="breadcrumb-item active">Servicio #{{ servicio.id }}</li>
+    </ol>
+  </nav>
+
+  <!-- Info del Servicio -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm border-0">
+        <div class="card-header" style="background: linear-gradient(135deg, var(--color-primary) 0%, rgba(43, 76, 126, 0.7) 100%);">
+          <h4 class="mb-0 text-white"><i class="bi bi-info-circle"></i> Detalles del Servicio #{{ servicio.id }}</h4>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            {% if servicio.vehiculo %}
+            <div class="col-md-3">
+              <p class="text-muted small mb-1"><strong>VEHÍCULO</strong></p>
+              <p class="mb-0">{{ servicio.vehiculo.patente }}</p>
+              <small class="text-muted">{{ servicio.vehiculo.marca }} {{ servicio.vehiculo.modelo }}</small>
+            </div>
+            {% endif %}
+
+            {% if servicio.vehiculo and servicio.vehiculo.cliente %}
+            <div class="col-md-3">
+              <p class="text-muted small mb-1"><strong>CLIENTE</strong></p>
+              <p class="mb-0">{{ servicio.vehiculo.cliente.nombre }}</p>
+              {% if servicio.vehiculo.cliente.rut %}
+              <small class="text-muted">{{ servicio.vehiculo.cliente.rut }}</small>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="col-md-3">
+              <p class="text-muted small mb-1"><strong>FECHA</strong></p>
+              <p class="mb-0">{{ servicio.fecha_servicio|date:"d/m/Y" }}</p>
+            </div>
+
+            <div class="col-md-3">
+              <p class="text-muted small mb-1"><strong>ESTADO</strong></p>
+              <span class="badge" style="background-color: var(--color-primary);">{{ servicio.get_estado_display }}</span>
+            </div>
+
+            {% if servicio.total %}
+            <div class="col-md-3">
+              <p class="text-muted small mb-1"><strong>TOTAL</strong></p>
+              <p class="mb-0 fw-bold text-success">${{ servicio.total|floatformat:0|intcomma }}</p>
+            </div>
+            {% endif %}
+          </div>
+
+          {% if servicio.descripcion_trabajo %}
+          <hr>
+          <div>
+            <p class="text-muted small mb-1"><strong>DESCRIPCIÓN</strong></p>
+            <p class="mb-0">{{ servicio.descripcion_trabajo }}</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección de Cotizaciones -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm border-0">
+        <div class="card-header" style="background: linear-gradient(135deg, var(--color-primary) 0%, rgba(43, 76, 126, 0.7) 100%);">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-white"><i class="bi bi-file-text"></i> Cotizaciones ({{ cotizaciones.count }})</h5>
+            <a href="{% url 'cotizaciones:registrar_cotizacion' %}?servicio_id={{ servicio.id }}" class="btn btn-sm btn-light">
+              <i class="bi bi-plus-circle"></i> Nueva
+            </a>
+          </div>
+        </div>
+        <div class="card-body">
+          {% if cotizaciones %}
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead style="background-color: var(--bg-elevated);">
+                  <tr>
+                    <th><i class="bi bi-file-text"></i> Cotización</th>
+                    <th>Cliente</th>
+                    <th>Fecha</th>
+                    <th>Total</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for cot in cotizaciones %}
+                  <tr>
+                    <td><strong>#{{ cot.numero_cotizacion }}</strong></td>
+                    <td>
+                      {% if cot.cliente %}
+                        {{ cot.cliente.nombre }}
+                      {% else %}
+                        <span class="text-muted">Sin cliente</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ cot.fecha_emision|date:"d/m/Y" }}</td>
+                    <td><strong class="text-success">${{ cot.monto_total|floatformat:0|intcomma }}</strong></td>
+                    <td>
+                      <span class="badge" style="background-color: {% if cot.estado_cotizacion == 'PENDIENTE' %}#ffc107{% elif cot.estado_cotizacion == 'APROBADA' %}#28a745{% else %}#dc3545{% endif %};">
+                        {{ cot.get_estado_cotizacion_display }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="btn-group btn-group-sm" role="group">
+                        <a href="{% url 'cotizaciones:descargar_pdf' cot.id %}" class="btn btn-outline-primary" target="_blank" title="PDF">
+                          <i class="bi bi-file-pdf"></i>
+                        </a>
+                        <a href="{% url 'cotizaciones:editar_cotizacion' cot.id %}" class="btn btn-outline-warning" title="Editar">
+                          <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{% url 'cotizaciones:duplicar_cotizacion' cot.id %}" class="btn btn-outline-info" title="Duplicar">
+                          <i class="bi bi-files"></i>
+                        </a>
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ cot.id }}" title="Eliminar">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- Modal de Eliminación -->
+                  <div class="modal fade" id="deleteModal{{ cot.id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header border-0" style="background-color: var(--error); color: white;">
+                          <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Confirmar eliminación</h5>
+                          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                          <p>¿Estás seguro de que deseas eliminar la cotización <strong>#{{ cot.numero_cotizacion }}</strong>?</p>
+                          <p class="text-muted mb-0">Esta acción no se puede deshacer.</p>
+                        </div>
+                        <div class="modal-footer border-0">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                          <form method="POST" action="{% url 'cotizaciones:eliminar_cotizacion' cot.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="alert alert-info mb-0">
+              <i class="bi bi-info-circle"></i> No hay cotizaciones. <a href="{% url 'cotizaciones:registrar_cotizacion' %}?servicio_id={{ servicio.id }}" class="alert-link">Crear una.</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección de Documentos -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm border-0">
+        <div class="card-header" style="background: linear-gradient(135deg, var(--color-primary) 0%, rgba(43, 76, 126, 0.7) 100%);">
+          <h5 class="mb-0 text-white"><i class="bi bi-file-earmark"></i> Documentos ({{ documentos.count }})</h5>
+        </div>
+        <div class="card-body">
+          <!-- Formulario de carga -->
+          <div class="mb-4 p-3" style="background-color: var(--bg-elevated); border-radius: 8px;">
+            <h6 class="mb-3"><i class="bi bi-upload"></i> Subir nuevo documento</h6>
+            <form method="POST" enctype="multipart/form-data" class="row g-2">
+              {% csrf_token %}
+              <div class="col-md-3">
+                {{ form.tipo_documento }}
+              </div>
+              <div class="col-md-3">
+                {{ form.fecha_documento }}
+              </div>
+              <div class="col-md-3">
+                {{ form.monto }}
+              </div>
+              <div class="col-md-2">
+                {{ form.archivo }}
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary btn-sm">
+                  <i class="bi bi-upload"></i> Subir
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Tabla de documentos -->
+          {% if documentos %}
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead style="background-color: var(--bg-elevated);">
+                  <tr>
+                    <th><i class="bi bi-file-earmark"></i> Tipo</th>
+                    <th>Fecha</th>
+                    <th>Monto</th>
+                    <th>Archivo</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for d in documentos %}
+                  <tr>
+                    <td><span class="badge" style="background-color: var(--color-primary);">{{ d.get_tipo_documento_display }}</span></td>
+                    <td>{{ d.fecha_documento|date:"d/m/Y" }}</td>
+                    <td>
+                      {% if d.monto %}
+                        <strong class="text-success">${{ d.monto|floatformat:0|intcomma }}</strong>
+                      {% else %}
+                        <span class="text-muted">-</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if d.archivo %}
+                        <a href="{{ d.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                          <i class="bi bi-eye"></i> Ver
+                        </a>
+                      {% else %}
+                        <span class="text-muted">Sin archivo</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <form method="POST" action="{% url 'servicios:documento_delete' d.id %}" class="d-inline" onsubmit="return confirm('¿Eliminar este documento?')">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="alert alert-info mb-0">
+              <i class="bi bi-info-circle"></i> No hay documentos registrados.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón volver -->
+  <div class="mb-4">
+    <a href="{% url 'servicios:list' %}" class="btn btn-secondary">
+      <i class="bi bi-arrow-left"></i> Volver a Servicios
+    </a>
+  </div>
+</div>
+
+<!-- Mensajes -->
+{% if messages %}
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+  {% for message in messages %}
+  <div class="toast show align-items-center text-white {% if message.tags == 'success' %}bg-success{% elif message.tags == 'error' %}bg-danger{% elif message.tags == 'warning' %}bg-warning{% else %}bg-info{% endif %} border-0">
+    <div class="d-flex">
+      <div class="toast-body">{{ message }}</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

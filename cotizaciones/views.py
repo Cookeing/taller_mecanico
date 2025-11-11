@@ -176,33 +176,37 @@ def EditarCotizacion(request, pk):
     cotizacion = get_object_or_404(Cotizacion, pk=pk)
     servicio = cotizacion.servicio
     
-    if request.method == "POST":
-        form = CotizacionForm(request.POST, instance=cotizacion)
-        
-        if form.is_valid(): 
+    # AGREGADO: Obtener items de la cotización
+    items = cotizacion.items.all()
+    
+    if request.method == 'POST':
+        form = CotizacionForm(request.POST, request.FILES, instance=cotizacion)
+        if form.is_valid():
             cotizacion = form.save(commit=False)
             
-            # Procesar items (igual que en RegistrarCotizacion)
             items_data_json = request.POST.get('items_data', '[]')
             try:
                 items_data = json.loads(items_data_json)
             except json.JSONDecodeError:
                 items_data = []
                 messages.error(request, "Error en los datos de los items.")
-                return render(request, "cotizaciones/cotizacion_form.html", {
-                    "form": form,
-                    "clientes": Cliente.objects.all(),
-                    "servicio": servicio,
+                return render(request, 'cotizaciones/cotizacion_form.html', {
+                    'form': form,
+                    'cotizacion': cotizacion,
+                    'items': items,  # AGREGADO
+                    'is_edit': True,  # AGREGADO
+                    'servicio': servicio,
                 })
             
-            # Eliminar items existentes y crear nuevos
+            # Eliminar items existentes
             cotizacion.items.all().delete()
             
+            # Crear nuevos items
             subtotal = 0
             for item_data in items_data:
                 cantidad = float(item_data.get('cantidad', 0))
                 precio_unitario = float(item_data.get('precio_unitario', 0))
-                subtotal += cantidad * precio_unitario
+                subtotal += (cantidad * precio_unitario)
                 
                 ItemCotizacion.objects.create(
                     cotizacion=cotizacion,
@@ -212,25 +216,25 @@ def EditarCotizacion(request, pk):
                     precio_unitario=precio_unitario
                 )
             
-            # Actualizar totales
             cotizacion.subtotal = subtotal
             cotizacion.save()
             
-            messages.success(request, "Cotización actualizada exitosamente.")    
-            return redirect("cotizaciones:listar_cotizaciones")
+            messages.success(request, 'Cotización actualizada exitosamente.')
+            return redirect('cotizaciones:listar_cotizaciones')
         else:
-            messages.error(request, "Error al actualizar la cotización.") 
+            messages.error(request, 'Error al actualizar la cotización.')
     else:
         form = CotizacionForm(instance=cotizacion)
     
-    clientes = Cliente.objects.all()
-    
-    return render(request, "cotizaciones/cotizacion_form.html", {
-        "form": form,
-        "clientes": clientes,
-        "servicio": servicio,
+    # CORREGIDO: Pasar items, is_edit y cotizacion al template
+    return render(request, 'cotizaciones/cotizacion_form.html', {
+        'form': form,
+        'cotizacion': cotizacion,
+        'items': items,  # AGREGADO
+        'is_edit': True,  # AGREGADO
+        'servicio': servicio,
     })
-
+    
 # Vista para duplicar cotización
 def DuplicarCotizacion(request, pk):
     cotizacion_original = get_object_or_404(Cotizacion, pk=pk)

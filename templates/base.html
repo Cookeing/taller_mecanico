@@ -5,50 +5,81 @@
     <title>Panel | Taller Mecánico</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     {% load static %}
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <!-- flatpickr CSS para datepicker -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
-    />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}">
   </head>
-  <body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="{% url 'home' %}">Taller Admin</a>
-        <div>
-          <a
-            href="{% url 'clientes:list' %}"
-            class="btn btn-sm btn-outline-light me-2"
-            >Clientes</a
-          >
-          <a
-            href="{% url 'vehiculos:list' %}"
-            class="btn btn-sm btn-outline-light me-2"
-            >Vehículos</a
-          >
-          <a
-            href="{% url 'servicios:list' %}"
-            class="btn btn-sm btn-outline-light me-2"
-            >Servicios</a
-          >
-          <a
-            href="{% url 'cotizaciones:listar_cotizaciones' %}"
-            class="btn btn-sm btn-outline-light"
-            >Cotizaciones</a
-          >
-        </div>
+  <body>
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-logo">
+        <i class="bi bi-tools"></i>
+        <span>Taller Admin</span>
       </div>
-    </nav>
-    <main class="container py-4">
-      {% block title %}{% endblock title %} {% block content %}{% endblock %}
-    </main>
-    <!-- Scripts: bootstrap bundle (optional), flatpickr and init script -->
+      
+      <nav class="sidebar-nav">
+        <a href="{% url 'home' %}" class="sidebar-item">
+          <i class="bi bi-house-door"></i>
+          <span>Inicio</span>
+        </a>
+        
+        <a href="{% url 'clientes:list' %}" class="sidebar-item">
+          <i class="bi bi-person-fill"></i>
+          <span>Clientes</span>
+        </a>
+        
+        <a href="{% url 'vehiculos:list' %}" class="sidebar-item">
+          <i class="bi bi-car-front-fill"></i>
+          <span>Vehículos</span>
+        </a>
+        
+        <a href="{% url 'servicios:list' %}" class="sidebar-item">
+          <i class="bi bi-wrench-adjustable-circle"></i>
+          <span>Servicios</span>
+        </a>
+        
+        <a href="{% url 'cotizaciones:listar_cotizaciones' %}" class="sidebar-item">
+          <i class="bi bi-file-text-fill"></i>
+          <span>Cotizaciones</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+      <main class="container-fluid py-4">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+
+    <!-- THEME TOGGLE -->
+    <button class="theme-toggle" id="theme-toggle">
+      <i class="bi bi-moon-stars"></i>
+    </button>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.js"></script>
     <script src="{% static 'js/fecha_picker.js' %}"></script>
+    <script>
+      const themeToggle = document.getElementById('theme-toggle');
+      const html = document.documentElement;
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      html.setAttribute('data-theme', savedTheme);
+      updateThemeIcon(savedTheme);
+      
+      themeToggle.addEventListener('click', () => {
+        const currentTheme = html.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        html.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(newTheme);
+      });
+      
+      function updateThemeIcon(theme) {
+        const icon = themeToggle.querySelector('i');
+        icon.className = theme === 'light' ? 'bi bi-sun-fill' : 'bi bi-moon-stars';
+      }
+    </script>
   </body>
 </html>

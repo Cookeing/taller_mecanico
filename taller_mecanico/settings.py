@@ -53,9 +53,11 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'cotizaciones.context_processors.empresa_settings',
             ],
         },
     },
@@ -145,3 +147,11 @@ DEFAULT_FROM_EMAIL = 'tallermecanicoteam06@gmail.com'
 
 # Para desarrollo/pruebas en consola, comentar lo de arriba y descomentar:
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Datos de empresa para autorellenar cotizaciones
+EMPRESA_NOMBRE = "Juan Pablo S.A."
+EMPRESA_RUT = "21.702.986-4"
+EMPRESA_GIRO = "Servicios de Mecánica Automotriz"
+EMPRESA_DIRECCION = "Calle Principal 123, Comuna, Ciudad"
+EMPRESA_TELEFONO = "+56 9 1234 5678"
+EMPRESA_EMAIL = "contacto@tuempresa.cl"

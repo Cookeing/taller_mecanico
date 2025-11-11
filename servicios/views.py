@@ -129,6 +129,10 @@ def cambiar_estado_servicio(request, pk):
 def documentos_servicio(request, servicio_id):
     servicio = get_object_or_404(Servicio, id=servicio_id)
     documentos = servicio.documentos.all().order_by('-fecha_documento')
+    
+    # AGREGADO: Cargar cotizaciones
+    from cotizaciones.models import Cotizacion
+    cotizaciones = Cotizacion.objects.filter(servicio=servicio).order_by('-fecha_emision')
 
     if request.method == "POST":
         form = DocumentoForm(request.POST, request.FILES)
@@ -141,9 +145,10 @@ def documentos_servicio(request, servicio_id):
     else:
         form = DocumentoForm()
 
-    return render(request, "vehiculos/documentos_servicio.html", {
+    return render(request, "servicios/documentos_servicio.html", {
         "servicio": servicio,
         "documentos": documentos,
+        "cotizaciones": cotizaciones,
         "form": form,
     })
 
