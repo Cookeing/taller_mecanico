@@ -1,181 +1,199 @@
+{% extends "base.html" %}
 {% load static %}
 {% load l10n %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if is_edit %}Editar{% else %}Nueva{% endif %} Cotización</title>
-    <link rel="stylesheet" href="{% static 'cotizaciones/css/cotizacion.css' %}">
-</head>
-<body>
-    <div class="cotizacion-container">
-        <form method="POST" id="cotizacion-form" enctype="multipart/form-data">
-            {% csrf_token %}
-            
-            <div class="header-section">
-                <div class="empresa-info">
-                    <input type="text" name="empresa_nombre" id="empresa_nombre" class="empresa-nombre-input" placeholder="NOMBRE DE TU EMPRESA" value="{% if cotizacion %}{{ cotizacion.empresa_nombre }}{% else %}{{ EMPRESA_NOMBRE|default:'' }}{% endif %}">
-                    
-                    <div class="empresa-detalles">
-                        <div class="detalle-row">
-                            <label>RUT:</label>
-                            <input type="text" name="empresa_rut" id="empresa_rut" value="{% if cotizacion %}{{ cotizacion.empresa_rut }}{% else %}{{ EMPRESA_RUT|default:'' }}{% endif %}">
-                        </div>
-                        <div class="detalle-row">
-                            <label>GIRO:</label>
-                            <input type="text" name="empresa_giro" id="empresa_giro" value="{% if cotizacion %}{{ cotizacion.empresa_giro }}{% else %}{{ EMPRESA_GIRO|default:'' }}{% endif %}">
-                        </div>
-                        <div class="detalle-row">
-                            <label>DIRECCIÓN:</label>
-                            <input type="text" name="empresa_direccion" id="empresa_direccion" value="{% if cotizacion %}{{ cotizacion.empresa_direccion }}{% else %}{{ EMPRESA_DIRECCION|default:'' }}{% endif %}">
-                        </div>
-                        <div class="detalle-row">
-                            <label>TELÉFONO:</label>
-                            <input type="text" name="empresa_telefono" id="empresa_telefono" value="{% if cotizacion %}{{ cotizacion.empresa_telefono }}{% else %}{{ EMPRESA_TELEFONO|default:'' }}{% endif %}">
-                        </div>
-                        <div class="detalle-row">
-                            <label>E-MAIL:</label>
-                            <input type="email" name="empresa_email" id="empresa_email" value="{% if cotizacion %}{{ cotizacion.empresa_email }}{% else %}{{ EMPRESA_EMAIL|default:'' }}{% endif %}">
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="logo-cotizacion-section">
-                    <div class="logo-upload">
-                        <div class="logo-preview" id="logo-preview">
-                            {% if cotizacion and cotizacion.logo %}<img src="{{ cotizacion.logo.url }}" alt="Logo">{% else %}<span class="logo-placeholder">LOGO</span>{% endif %}
-                        </div>
-                        <input type="file" name="logo" id="logo-input" accept="image/*" style="display: none;">
-                        <button type="button" class="btn-upload-logo" onclick="document.getElementById('logo-input').click()">Subir Logo</button>
-                    </div>
-                    
-                    <div class="cotizacion-numero-fecha">
-                        <div class="numero-consecutivo">
-                            <label>CONSECUTIVO</label>
-                            <input type="text" name="numero_cotizacion" id="numero_cotizacion" value="{% if cotizacion %}{{ cotizacion.numero_cotizacion }}{% endif %}" placeholder="0001">
-                        </div>
-                        <div class="fecha-group">
-                            <label>FECHA</label>
-                            <input type="date" name="fecha_emision" id="fecha_emision" value="{% if cotizacion %}{{ cotizacion.fecha_emision|date:'Y-m-d' }}{% endif %}">
-                        </div>
-                        <div class="fecha-group">
-                            <label>VALIDEZ</label>
-                            <input type="date" name="fecha_validez" id="fecha_validez" value="{% if cotizacion %}{{ cotizacion.fecha_validez|date:'Y-m-d' }}{% endif %}">
-                        </div>
-                    </div>
-                </div>
+
+{% block content %}
+<style>
+/* Estilos adicionales para que no rompa el layout de base.html */
+.main-content {
+  background-color: var(--bg-primary) !important;
+  padding: 0 !important;
+  margin-left: 0 !important;
+  width: 100% !important;
+}
+
+body {
+  background-color: var(--bg-primary) !important;
+}
+
+/* Ocultar sidebar y mostrar solo contenido */
+.cotizacion-wrapper {
+  max-width: 100%;
+  margin: 0;
+  padding: 20px;
+}
+</style>
+
+<div class="cotizacion-wrapper">
+  <link rel="stylesheet" href="{% static 'cotizaciones/css/cotizacion.css' %}">
+  
+  <div class="cotizacion-container">
+    <form method="POST" id="cotizacion-form" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <div class="header-section">
+        <div class="empresa-info">
+          <input type="text" name="empresa_nombre" id="empresa_nombre" class="empresa-nombre-input" placeholder="NOMBRE DE TU EMPRESA" value="{% if cotizacion %}{{ cotizacion.empresa_nombre }}{% else %}{{ EMPRESA_NOMBRE|default:'' }}{% endif %}">
+          
+          <div class="empresa-detalles">
+            <div class="detalle-row">
+              <label>RUT:</label>
+              <input type="text" name="empresa_rut" id="empresa_rut" value="{% if cotizacion %}{{ cotizacion.empresa_rut }}{% else %}{{ EMPRESA_RUT|default:'' }}{% endif %}">
             </div>
-            
-            <div class="cliente-section">
-                <h3 class="section-title">DETALLES DEL CLIENTE{% if servicio %}<span class="badge-servicio">Vinculado al Servicio #{{ servicio.id }}</span>{% endif %}</h3>
-                <input type="hidden" name="cliente_id" value="{% if cotizacion %}{{ cotizacion.cliente.id }}{% elif servicio %}{{ servicio.vehiculo.cliente.id }}{% endif %}">
-                <div class="cliente-grid">
-                    <div class="cliente-campo">
-                        <label>Nombre / Razón Social:</label>
-                        <input type="text" name="cliente_nombre" value="{% if cotizacion.cliente %}{{ cotizacion.cliente.nombre }}{% elif servicio and servicio.vehiculo.cliente %}{{ servicio.vehiculo.cliente.nombre }}{% endif %}">
-                    </div>
-                    <div class="cliente-campo">
-                        <label>RUT:</label>
-                        <input type="text" name="cliente_rut" value="{% if cotizacion.cliente %}{{ cotizacion.cliente.rut }}{% elif servicio and servicio.vehiculo.cliente %}{{ servicio.vehiculo.cliente.rut }}{% endif %}">
-                    </div>
-                    <div class="cliente-campo">
-                        <label>Dirección:</label>
-                        <input type="text" name="cliente_direccion" value="{% if cotizacion.cliente %}{{ cotizacion.cliente.direccion }}{% elif servicio and servicio.vehiculo.cliente %}{{ servicio.vehiculo.cliente.direccion }}{% endif %}">
-                    </div>
-                    <div class="cliente-campo">
-                        <label>Teléfono:</label>
-                        <input type="text" name="cliente_telefono" value="{% if cotizacion.cliente %}{{ cotizacion.cliente.telefono }}{% elif servicio and servicio.vehiculo.cliente %}{{ servicio.vehiculo.cliente.telefono }}{% endif %}">
-                    </div>
-                    <div class="cliente-campo">
-                        <label>Email:</label>
-                        <input type="email" name="cliente_email" value="{% if cotizacion.cliente %}{{ cotizacion.cliente.email|default:'' }}{% elif servicio and servicio.vehiculo.cliente %}{{ servicio.vehiculo.cliente.email|default:'' }}{% endif %}">
-                    </div>
-                    <div class="cliente-campo">
-                        <label>Contacto:</label>
-                        <input type="text" name="cliente_contacto" value="{% if cotizacion.cliente %}{{ cotizacion.cliente.contacto|default:'' }}{% elif servicio and servicio.vehiculo.cliente %}{{ servicio.vehiculo.cliente.contacto|default:'' }}{% endif %}">
-                    </div>
-                </div>
+            <div class="detalle-row">
+              <label>GIRO:</label>
+              <input type="text" name="empresa_giro" id="empresa_giro" value="{% if cotizacion %}{{ cotizacion.empresa_giro }}{% else %}{{ EMPRESA_GIRO|default:'' }}{% endif %}">
             </div>
-            
-            <div class="items-section">
-                <div id="categorias-container"></div>
-                <button type="button" class="btn-add-category" onclick="addCategory()">+ Agregar Nueva Categoría</button>
+            <div class="detalle-row">
+              <label>DIRECCIÓN:</label>
+              <input type="text" name="empresa_direccion" id="empresa_direccion" value="{% if cotizacion %}{{ cotizacion.empresa_direccion }}{% else %}{{ EMPRESA_DIRECCION|default:'' }}{% endif %}">
             </div>
-            
-            <div class="footer-section">
-                <div class="terminos-section">
-                    <h4>TÉRMINOS Y CONDICIONES:</h4>
-                    <div class="terminos-grid">
-                        <div class="termino-campo">
-                            <label>Forma de Pago:</label>
-                            <select name="forma_pago" id="forma_pago">
-                                <option value="">-- Seleccione --</option>
-                                <option value="transferencia" {% if cotizacion and cotizacion.forma_pago == 'transferencia' %}selected{% endif %}>Transferencia Bancaria</option>
-                                <option value="efectivo" {% if cotizacion and cotizacion.forma_pago == 'efectivo' %}selected{% endif %}>Efectivo</option>
-                                <option value="cheque" {% if cotizacion and cotizacion.forma_pago == 'cheque' %}selected{% endif %}>Cheque</option>
-                                <option value="tarjeta" {% if cotizacion and cotizacion.forma_pago == 'tarjeta' %}selected{% endif %}>Tarjeta</option>
-                            </select>
-                        </div>
-                        <div class="termino-campo">
-                            <label>Plazo de Pago:</label>
-                            <select name="plazo_pago" id="plazo_pago">
-                                <option value="">-- Seleccione --</option>
-                                <option value="contado" {% if cotizacion and cotizacion.plazo_pago == 'contado' %}selected{% endif %}>Al Contado</option>
-                                <option value="15" {% if cotizacion and cotizacion.plazo_pago == '15' %}selected{% endif %}>15 días</option>
-                                <option value="30" {% if cotizacion and cotizacion.plazo_pago == '30' %}selected{% endif %}>30 días</option>
-                                <option value="45" {% if cotizacion and cotizacion.plazo_pago == '45' %}selected{% endif %}>45 días</option>
-                                <option value="60" {% if cotizacion and cotizacion.plazo_pago == '60' %}selected{% endif %}>60 días</option>
-                                <option value="90" {% if cotizacion and cotizacion.plazo_pago == '90' %}selected{% endif %}>90 días</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="totales-section">
-                    <div class="total-row"><span class="total-label">SUBTOTAL</span><span class="total-value" id="display-subtotal">$0</span></div>
-                    <div class="total-row"><span class="total-label">IVA 19%</span><span class="total-value" id="display-iva">$0</span></div>
-                    <div class="total-row total-final"><span class="total-label">TOTAL</span><span class="total-value" id="display-total">$0</span></div>
-                </div>
+            <div class="detalle-row">
+              <label>TELÉFONO:</label>
+              <input type="text" name="empresa_telefono" id="empresa_telefono" value="{% if cotizacion %}{{ cotizacion.empresa_telefono }}{% else %}{{ EMPRESA_TELEFONO|default:'' }}{% endif %}">
             </div>
-            
-            <div style="margin: 20px 0; padding: 15px; background: #ffffff; border: 1px solid #000000;">
-                <label style="font-weight: bold; font-size: 12px; color: #000000; display: block; margin-bottom: 8px;">NOTAS ADICIONALES:</label>
-                <textarea name="notas_adicionales" style="width: 100%; height: 80px; padding: 8px; border: 1px solid #000000; font-size: 11px; font-family: Arial, sans-serif; background: white; color: #000000;">{% if cotizacion %}{{ cotizacion.notas_adicionales|default:'' }}{% endif %}</textarea>
+            <div class="detalle-row">
+              <label>E-MAIL:</label>
+              <input type="email" name="empresa_email" id="empresa_email" value="{% if cotizacion %}{{ cotizacion.empresa_email }}{% else %}{{ EMPRESA_EMAIL|default:'' }}{% endif %}">
             </div>
-            
-            <input type="hidden" name="items_data" id="items_data">
-            
-            <div class="action-buttons">
-                <button type="submit" class="btn-guardar">{% if is_edit %}✅ Actualizar{% else %}💾 Guardar{% endif %} Cotización</button>
-                {% if servicio %}<a href="{% url 'servicios:documentos_servicio' servicio.id %}" class="btn-cancelar">❌ Volver al Servicio</a>{% else %}<a href="{% url 'cotizaciones:listar_cotizaciones' %}" class="btn-cancelar">❌ Cancelar</a>{% endif %}
+          </div>
+        </div>
+        
+        <div class="logo-cotizacion-section">
+          <div class="logo-upload">
+            <div class="logo-preview" id="logo-preview">
+              {% if cotizacion and cotizacion.logo %}<img src="{{ cotizacion.logo.url }}" alt="Logo">{% else %}<span class="logo-placeholder">LOGO</span>{% endif %}
             </div>
-        </form>
-    </div>
-    
-    {% if is_edit and items %}
-    <script type="application/json" id="items-data-json">
-    [{% for item in items %}{
-        "categoria": "{{ item.categoria|default:'Servicios'|escapejs }}",
-        "descripcion": "{{ item.descripcion|default:''|escapejs }}",
-        "cantidad": {{ item.cantidad|unlocalize }},
-        "precio_unitario": {{ item.precio_unitario|unlocalize }}
-    }{% if not forloop.last %},{% endif %}{% endfor %}]
-    </script>
-    {% endif %}
-    
-    <script src="{% static 'cotizaciones/js/cotizacion.js' %}"></script>
-    <script>
-        document.getElementById('logo-input').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('logo-preview').innerHTML = '<img src="' + e.target.result + '" alt="Logo">';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    </script>
-</body>
-</html>
+            <input type="file" name="logo" id="logo-input" accept="image/*" style="display: none;">
+            <button type="button" class="btn-upload-logo" onclick="document.getElementById('logo-input').click()">Subir Logo</button>
+          </div>
+          
+          <div class="cotizacion-numero-fecha">
+            <div class="numero-consecutivo">
+              <label>CONSECUTIVO</label>
+              <input type="text" name="numero_cotizacion" id="numero_cotizacion" value="{% if cotizacion %}{{ cotizacion.numero_cotizacion }}{% endif %}" placeholder="0001">
+            </div>
+            <div class="fecha-group">
+              <label>FECHA</label>
+              <input type="date" name="fecha_emision" id="fecha_emision" value="{% if cotizacion %}{{ cotizacion.fecha_emision|date:'Y-m-d' }}{% endif %}">
+            </div>
+            <div class="fecha-group">
+              <label>VALIDEZ</label>
+              <input type="date" name="fecha_validez" id="fecha_validez" value="{% if cotizacion %}{{ cotizacion.fecha_validez|date:'Y-m-d' }}{% endif %}">
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="cliente-section">
+        <h3 class="section-title">DETALLES DEL CLIENTE{% if servicio %}<span class="badge-servicio">Vinculado al Servicio #{{ servicio.id }}</span>{% endif %}</h3>
+        <input type="hidden" name="cliente_id" value="{% if cotizacion %}{{ cotizacion.cliente.id }}{% elif servicio %}{{ servicio.vehiculo.cliente.id }}{% endif %}">
+        <div class="cliente-grid">
+          <div class="cliente-campo">
+            <label>Nombre / Razón Social:</label>
+            <input type="text" name="cliente_nombre" value="{% if cotizacion.cliente %}{{ cotizacion.cliente.nombre }}{% elif servicio and servicio.vehiculo.cliente %}{{ servicio.vehiculo.cliente.nombre }}{% endif %}">
+          </div>
+          <div class="cliente-campo">
+            <label>RUT:</label>
+            <input type="text" name="cliente_rut" value="{% if cotizacion.cliente %}{{ cotizacion.cliente.rut }}{% elif servicio and servicio.vehiculo.cliente %}{{ servicio.vehiculo.cliente.rut }}{% endif %}">
+          </div>
+          <div class="cliente-campo">
+            <label>Dirección:</label>
+            <input type="text" name="cliente_direccion" value="{% if cotizacion.cliente %}{{ cotizacion.cliente.direccion }}{% elif servicio and servicio.vehiculo.cliente %}{{ servicio.vehiculo.cliente.direccion }}{% endif %}">
+          </div>
+          <div class="cliente-campo">
+            <label>Teléfono:</label>
+            <input type="text" name="cliente_telefono" value="{% if cotizacion.cliente %}{{ cotizacion.cliente.telefono }}{% elif servicio and servicio.vehiculo.cliente %}{{ servicio.vehiculo.cliente.telefono }}{% endif %}">
+          </div>
+          <div class="cliente-campo">
+            <label>Email:</label>
+            <input type="email" name="cliente_email" value="{% if cotizacion.cliente %}{{ cotizacion.cliente.email|default:'' }}{% elif servicio and servicio.vehiculo.cliente %}{{ servicio.vehiculo.cliente.email|default:'' }}{% endif %}">
+          </div>
+          <div class="cliente-campo">
+            <label>Contacto:</label>
+            <input type="text" name="cliente_contacto" value="{% if cotizacion.cliente %}{{ cotizacion.cliente.contacto|default:'' }}{% elif servicio and servicio.vehiculo.cliente %}{{ servicio.vehiculo.cliente.contacto|default:'' }}{% endif %}">
+          </div>
+        </div>
+      </div>
+      
+      <div class="items-section">
+        <div id="categorias-container"></div>
+        <button type="button" class="btn-add-category" onclick="addCategory()">+ Agregar Nueva Categoría</button>
+      </div>
+      
+      <div class="footer-section">
+        <div class="terminos-section">
+          <h4>TÉRMINOS Y CONDICIONES:</h4>
+          <div class="terminos-grid">
+            <div class="termino-campo">
+              <label>Forma de Pago:</label>
+              <select name="forma_pago" id="forma_pago">
+                <option value="">-- Seleccione --</option>
+                <option value="transferencia" {% if cotizacion and cotizacion.forma_pago == 'transferencia' %}selected{% endif %}>Transferencia Bancaria</option>
+                <option value="efectivo" {% if cotizacion and cotizacion.forma_pago == 'efectivo' %}selected{% endif %}>Efectivo</option>
+                <option value="cheque" {% if cotizacion and cotizacion.forma_pago == 'cheque' %}selected{% endif %}>Cheque</option>
+                <option value="tarjeta" {% if cotizacion and cotizacion.forma_pago == 'tarjeta' %}selected{% endif %}>Tarjeta</option>
+              </select>
+            </div>
+            <div class="termino-campo">
+              <label>Plazo de Pago:</label>
+              <select name="plazo_pago" id="plazo_pago">
+                <option value="">-- Seleccione --</option>
+                <option value="contado" {% if cotizacion and cotizacion.plazo_pago == 'contado' %}selected{% endif %}>Al Contado</option>
+                <option value="15" {% if cotizacion and cotizacion.plazo_pago == '15' %}selected{% endif %}>15 días</option>
+                <option value="30" {% if cotizacion and cotizacion.plazo_pago == '30' %}selected{% endif %}>30 días</option>
+                <option value="45" {% if cotizacion and cotizacion.plazo_pago == '45' %}selected{% endif %}>45 días</option>
+                <option value="60" {% if cotizacion and cotizacion.plazo_pago == '60' %}selected{% endif %}>60 días</option>
+                <option value="90" {% if cotizacion and cotizacion.plazo_pago == '90' %}selected{% endif %}>90 días</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <div class="totales-section">
+          <div class="total-row"><span class="total-label">SUBTOTAL</span><span class="total-value" id="display-subtotal">$0</span></div>
+          <div class="total-row"><span class="total-label">IVA 19%</span><span class="total-value" id="display-iva">$0</span></div>
+          <div class="total-row total-final"><span class="total-label">TOTAL</span><span class="total-value" id="display-total">$0</span></div>
+        </div>
+      </div>
+      
+      <div style="margin: 20px 0; padding: 15px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px;">
+        <label style="font-weight: bold; font-size: 12px; color: var(--color-text); display: block; margin-bottom: 8px;">NOTAS ADICIONALES:</label>
+        <textarea name="notas_adicionales" style="width: 100%; height: 80px; padding: 8px; border: 1px solid var(--color-border); font-size: 11px; font-family: Arial, sans-serif; background: var(--color-surface); color: var(--color-text); border-radius: 4px;">{% if cotizacion %}{{ cotizacion.notas_adicionales|default:'' }}{% endif %}</textarea>
+      </div>
+      
+      <input type="hidden" name="items_data" id="items_data">
+      
+      <div class="action-buttons">
+        <button type="submit" class="btn-guardar">{% if is_edit %}✅ Actualizar{% else %}💾 Guardar{% endif %} Cotización</button>
+        {% if servicio %}<a href="{% url 'servicios:documentos_servicio' servicio.id %}" class="btn-cancelar">❌ Volver al Servicio</a>{% else %}<a href="{% url 'cotizaciones:listar_cotizaciones' %}" class="btn-cancelar">❌ Cancelar</a>{% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if is_edit and items %}
+<script type="application/json" id="items-data-json">
+[{% for item in items %}{
+  "categoria": "{{ item.categoria|default:'Servicios'|escapejs }}",
+  "descripcion": "{{ item.descripcion|default:''|escapejs }}",
+  "cantidad": {{ item.cantidad|unlocalize }},
+  "precio_unitario": {{ item.precio_unitario|unlocalize }}
+}{% if not forloop.last %},{% endif %}{% endfor %}]
+</script>
+{% endif %}
+
+<script src="{% static 'cotizaciones/js/cotizacion.js' %}"></script>
+<script>
+document.getElementById('logo-input').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('logo-preview').innerHTML = '<img src="' + e.target.result + '" alt="Logo">';
+    };
+    reader.readAsDataURL(file);
+  }
+});
+</script>
+{% endblock %}
