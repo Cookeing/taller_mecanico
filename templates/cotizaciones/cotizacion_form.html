@@ -4,7 +4,7 @@
 
 {% block content %}
 <style>
-/* Estilos adicionales para que no rompa el layout de base.html */
+/* Estilos adicionales */
 .main-content {
   background-color: var(--bg-primary) !important;
   padding: 0 !important;
@@ -16,20 +16,60 @@ body {
   background-color: var(--bg-primary) !important;
 }
 
-/* Ocultar sidebar y mostrar solo contenido */
 .cotizacion-wrapper {
   max-width: 100%;
   margin: 0;
   padding: 20px;
+}
+
+/* ESTILOS DE VALIDACIÓN */
+.field-error {
+  border: 2px solid #E57373 !important;
+  background-color: rgba(229, 115, 115, 0.1) !important;
+}
+
+.error-message {
+  color: #E57373;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+  font-weight: 500;
+}
+
+.alert-errors {
+  background: #E57373;
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: none;
+}
+
+.alert-errors.show {
+  display: block;
+}
+
+.alert-errors ul {
+  margin: 0;
+  padding-left: 20px;
 }
 </style>
 
 <div class="cotizacion-wrapper">
   <link rel="stylesheet" href="{% static 'cotizaciones/css/cotizacion.css' %}">
   
+  <!-- ALERTA DE ERRORES -->
+  <div class="alert-errors" id="error-alert">
+    <strong>⚠️ Por favor, corrija los siguientes errores:</strong>
+    <ul id="error-list"></ul>
+  </div>
+  
   <div class="cotizacion-container">
-    <form method="POST" id="cotizacion-form" enctype="multipart/form-data">
+    <form method="POST" id="cotizacion-form" enctype="multipart/form-data" novalidate>
       {% csrf_token %}
+      
+      <!-- CAMPO OCULTO: estado_cotizacion -->
+      <input type="hidden" name="estado_cotizacion" value="PENDIENTE">
       
       <div class="header-section">
         <div class="empresa-info">
@@ -73,13 +113,21 @@ body {
               <label>CONSECUTIVO</label>
               <input type="text" name="numero_cotizacion" id="numero_cotizacion" value="{% if cotizacion %}{{ cotizacion.numero_cotizacion }}{% endif %}" placeholder="0001">
             </div>
+            
+            <!-- FECHA EMISIÓN - REQUERIDO -->
             <div class="fecha-group">
-              <label>FECHA</label>
-              <input type="date" name="fecha_emision" id="fecha_emision" value="{% if cotizacion %}{{ cotizacion.fecha_emision|date:'Y-m-d' }}{% endif %}">
+              <label>FECHA <span style="color: #E57373;">*</span></label>
+              <input type="date" name="fecha_emision" id="fecha_emision" 
+                     value="{% if cotizacion %}{{ cotizacion.fecha_emision|date:'Y-m-d' }}{% else %}{{ today|date:'Y-m-d' }}{% endif %}" 
+                     required>
+              <span class="error-message" id="error-fecha_emision"></span>
             </div>
+            
+            <!-- FECHA VALIDEZ -->
             <div class="fecha-group">
               <label>VALIDEZ</label>
-              <input type="date" name="fecha_validez" id="fecha_validez" value="{% if cotizacion %}{{ cotizacion.fecha_validez|date:'Y-m-d' }}{% endif %}">
+              <input type="date" name="fecha_validez" id="fecha_validez" 
+                     value="{% if cotizacion %}{{ cotizacion.fecha_validez|date:'Y-m-d' }}{% else %}{{ validez|date:'Y-m-d' }}{% endif %}">
             </div>
           </div>
         </div>
@@ -87,11 +135,17 @@ body {
       
       <div class="cliente-section">
         <h3 class="section-title">DETALLES DEL CLIENTE{% if servicio %}<span class="badge-servicio">Vinculado al Servicio #{{ servicio.id }}</span>{% endif %}</h3>
-        <input type="hidden" name="cliente_id" value="{% if cotizacion %}{{ cotizacion.cliente.id }}{% elif servicio %}{{ servicio.vehiculo.cliente.id }}{% endif %}">
+        
+        <!-- CAMPO OCULTO: cliente_id -->
+        <input type="hidden" name="cliente" id="cliente_id" value="{% if cotizacion %}{{ cotizacion.cliente.id }}{% elif servicio %}{{ servicio.vehiculo.cliente.id }}{% endif %}">
+        
         <div class="cliente-grid">
           <div class="cliente-campo">
-            <label>Nombre / Razón Social:</label>
-            <input type="text" name="cliente_nombre" value="{% if cotizacion.cliente %}{{ cotizacion.cliente.nombre }}{% elif servicio and servicio.vehiculo.cliente %}{{ servicio.vehiculo.cliente.nombre }}{% endif %}">
+            <label>Nombre / Razón Social: <span style="color: #E57373;">*</span></label>
+            <input type="text" name="cliente_nombre" id="cliente_nombre" 
+                   value="{% if cotizacion.cliente %}{{ cotizacion.cliente.nombre }}{% elif servicio and servicio.vehiculo.cliente %}{{ servicio.vehiculo.cliente.nombre }}{% endif %}" 
+                   required>
+            <span class="error-message" id="error-cliente"></span>
           </div>
           <div class="cliente-campo">
             <label>RUT:</label>
@@ -165,7 +219,7 @@ body {
       <input type="hidden" name="items_data" id="items_data">
       
       <div class="action-buttons">
-        <button type="submit" class="btn-guardar">{% if is_edit %}✅ Actualizar{% else %}💾 Guardar{% endif %} Cotización</button>
+        <button type="submit" class="btn-guardar" id="btn-guardar">{% if is_edit %}✅ Actualizar{% else %}💾 Guardar{% endif %} Cotización</button>
         {% if servicio %}<a href="{% url 'servicios:documentos_servicio' servicio.id %}" class="btn-cancelar">❌ Volver al Servicio</a>{% else %}<a href="{% url 'cotizaciones:listar_cotizaciones' %}" class="btn-cancelar">❌ Cancelar</a>{% endif %}
       </div>
     </form>
@@ -185,6 +239,7 @@ body {
 
 <script src="{% static 'cotizaciones/js/cotizacion.js' %}"></script>
 <script>
+// Logo preview
 document.getElementById('logo-input').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (file) {
@@ -194,6 +249,68 @@ document.getElementById('logo-input').addEventListener('change', function(e) {
     };
     reader.readAsDataURL(file);
   }
+});
+
+// VALIDACIÓN DEL FORMULARIO
+document.getElementById('cotizacion-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  // Limpiar errores anteriores
+  document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+  document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+  document.getElementById('error-alert').classList.remove('show');
+  document.getElementById('error-list').innerHTML = '';
+  
+  const errors = [];
+  
+  // Validar fecha_emision
+  const fechaEmision = document.getElementById('fecha_emision');
+  if (!fechaEmision.value) {
+    errors.push('Fecha de emisión es obligatoria');
+    fechaEmision.classList.add('field-error');
+    document.getElementById('error-fecha_emision').textContent = 'Este campo es obligatorio';
+  }
+  
+  // Validar cliente
+  const clienteId = document.getElementById('cliente_id');
+  const clienteNombre = document.getElementById('cliente_nombre');
+  if (!clienteId.value && !clienteNombre.value) {
+    errors.push('Debe seleccionar o ingresar un cliente');
+    clienteNombre.classList.add('field-error');
+    document.getElementById('error-cliente').textContent = 'Este campo es obligatorio';
+  }
+  
+  // Validar items (al menos 1)
+  const itemsData = document.getElementById('items_data').value;
+  let items = [];
+  try {
+    items = JSON.parse(itemsData);
+  } catch(e) {
+    items = [];
+  }
+  
+  if (items.length === 0) {
+    errors.push('Debe agregar al menos un ítem a la cotización');
+  }
+  
+  // Si hay errores, mostrar y no enviar
+  if (errors.length > 0) {
+    const errorList = document.getElementById('error-list');
+    errors.forEach(error => {
+      const li = document.createElement('li');
+      li.textContent = error;
+      errorList.appendChild(li);
+    });
+    document.getElementById('error-alert').classList.add('show');
+    
+    // Scroll al top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return false;
+  }
+  
+  // Si todo OK, enviar el formulario
+  console.log('Formulario válido, enviando...');
+  this.submit();
 });
 </script>
 {% endblock %}

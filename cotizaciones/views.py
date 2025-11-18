@@ -1,6 +1,5 @@
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.shortcuts import get_object_or_404, render, redirect
-from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_GET
@@ -19,7 +18,7 @@ from .utils import generar_pdf_cotizacion
 
 
 def RegistrarCotizacion(request):
-    # NUEVO: Obtener servicio_id sin afectar lógica existente
+    # Obtener servicio_id
     servicio_id = request.GET.get('servicio_id') or request.POST.get('servicio_id')
     servicio = None
     
@@ -27,67 +26,81 @@ def RegistrarCotizacion(request):
         try:
             servicio = Servicio.objects.select_related('vehiculo__cliente').get(id=servicio_id)
         except Servicio.DoesNotExist:
-            # No mostrar error para no interrumpir flujo existente
             pass
     
     if request.method == "POST":
-        form = CotizacionForm(request.POST)
+        form = CotizacionForm(request.POST, request.FILES)
         
-        if form.is_valid(): 
-            cotizacion = form.save(commit=False)
+        # DEBUG: Mostrar errores del formulario
+        if not form.is_valid():
+            print("FORM ERRORS (cotizacion):", form.errors)
+            messages.error(request, "Error al registrar la cotización. Por favor revise los campos marcados.")
             
-            # NUEVO: Asignar servicio si existe (sin afectar lógica existente)
-            if servicio:
-                cotizacion.servicio = servicio
-                # Opcional: asignar cliente automáticamente si no está seleccionado
-                if not cotizacion.cliente and servicio.vehiculo and servicio.vehiculo.cliente:
-                    cotizacion.cliente = servicio.vehiculo.cliente
-            
-            # MANTENER TODA LA LÓGICA EXISTENTE SIN CAMBIOS
-            items_data_json = request.POST.get('items_data', '[]')
-            try:
-                items_data = json.loads(items_data_json)
-            except json.JSONDecodeError:
-                items_data = []
-                messages.error(request, "Error en los datos de los items.")
-                return render(request, "cotizaciones/cotizacion_form.html", {
-                    "form": form,
-                    "clientes": Cliente.objects.all(),
-                    "servicio": servicio,  # NUEVO: pasar servicio al template
-                })
-            
-            subtotal = 0
-            for item_data in items_data:
-                cantidad = float(item_data.get('cantidad', 0))
-                precio_unitario = float(item_data.get('precio_unitario', 0))
-                subtotal += cantidad * precio_unitario
-            
-            # Mantener lógica existente
-            cotizacion.subtotal = subtotal
-            cotizacion.save()
-            
-            # Mantener lógica existente
-            for item_data in items_data:
-                ItemCotizacion.objects.create(
-                    cotizacion=cotizacion,
-                    categoria=item_data.get('categoria', 'Servicios'),
-                    descripcion=item_data.get('descripcion', ''),
-                    cantidad=item_data.get('cantidad', 0),
-                    precio_unitario=item_data.get('precio_unitario', 0)
-                )
-            
-            messages.success(request, "Cotización registrada exitosamente.")    
-            return redirect("cotizaciones:listar_cotizaciones")
-        else:
-            messages.error(request, "Error al registrar la cotización.") 
+            # Pasar fechas para rellenar
+            return render(request, "cotizaciones/cotizacion_form.html", {
+                "form": form,
+                "clientes": Cliente.objects.all(),
+                "servicio": servicio,
+                "today": timezone.now().date(),
+                "validez": (timezone.now() + timedelta(days=30)).date(),
+            })
+        
+        # Si es válido, procesar
+        cotizacion = form.save(commit=False)
+        
+        # Asignar servicio si existe
+        if servicio:
+            cotizacion.servicio = servicio
+            if not cotizacion.cliente and servicio.vehiculo and servicio.vehiculo.cliente:
+                cotizacion.cliente = servicio.vehiculo.cliente
+        
+        # Procesar items
+        items_data_json = request.POST.get('items_data', '[]')
+        try:
+            items_data = json.loads(items_data_json)
+        except json.JSONDecodeError:
+            items_data = []
+            messages.error(request, "Error en los datos de los items.")
+            return render(request, "cotizaciones/cotizacion_form.html", {
+                "form": form,
+                "clientes": Cliente.objects.all(),
+                "servicio": servicio,
+                "today": timezone.now().date(),
+                "validez": (timezone.now() + timedelta(days=30)).date(),
+            })
+        
+        # Calcular subtotal
+        subtotal = 0
+        for item_data in items_data:
+            cantidad = float(item_data.get('cantidad', 0))
+            precio_unitario = float(item_data.get('precio_unitario', 0))
+            subtotal += cantidad * precio_unitario
+        
+        cotizacion.subtotal = subtotal
+        cotizacion.save()
+        
+        # Crear items
+        for item_data in items_data:
+            ItemCotizacion.objects.create(
+                cotizacion=cotizacion,
+                categoria=item_data.get('categoria', 'Servicios'),
+                descripcion=item_data.get('descripcion', ''),
+                cantidad=item_data.get('cantidad', 0),
+                precio_unitario=item_data.get('precio_unitario', 0)
+            )
+        
+        messages.success(request, "Cotización registrada exitosamente.")    
+        return redirect("cotizaciones:listar_cotizaciones")
+    
     else:
-        # MANTENER LÓGICA EXISTENTE
+        # GET: Pre-cargar datos
         initial_data = {
             'fecha_emision': timezone.now().date(),
             'fecha_validez': (timezone.now() + timedelta(days=30)).date(),
+            'estado_cotizacion': 'PENDIENTE',
         }
         
-        # NUEVO: Pre-cargar cliente si hay servicio (sin afectar lógica existente)
+        # Pre-cargar cliente si hay servicio
         if servicio and servicio.vehiculo and servicio.vehiculo.cliente:
             initial_data['cliente'] = servicio.vehiculo.cliente
         
@@ -98,8 +111,11 @@ def RegistrarCotizacion(request):
     return render(request, "cotizaciones/cotizacion_form.html", {
         "form": form,
         "clientes": clientes,
-        "servicio": servicio,  # NUEVO: pasar servicio al template
+        "servicio": servicio,
+        "today": timezone.now().date(),
+        "validez": (timezone.now() + timedelta(days=30)).date(),
     })
+
 
 def historial_cotizaciones(request):
     cotizaciones = Cotizacion.objects.all().select_related('cliente', 'servicio').order_by('-fecha_creacion')
@@ -112,12 +128,12 @@ def historial_cotizaciones(request):
     if estado:
         cotizaciones = cotizaciones.filter(estado_cotizacion=estado)
 
-    # Estadísticas para las tarjetas
+    # Estadísticas
     cotizaciones_aprobadas = Cotizacion.objects.filter(estado_cotizacion='APROBADA').count()
     cotizaciones_pendientes = Cotizacion.objects.filter(estado_cotizacion='PENDIENTE').count()
 
     # Paginación
-    paginator = Paginator(cotizaciones, 10)  # 10 items por página
+    paginator = Paginator(cotizaciones, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -129,25 +145,7 @@ def historial_cotizaciones(request):
         'cotizaciones_pendientes': cotizaciones_pendientes,
     })
 
-# def historial_cotizaciones(request):
-#     # CORREGIDO: Eliminado 'vehiculo' del select_related
-#     cotizaciones = Cotizacion.objects.all().select_related('cliente')
 
-#     cliente = request.GET.get('cliente')
-#     # CORREGIDO: Eliminado el filtro por patente
-#     # patente = request.GET.get('patente')
-
-#     if cliente:
-#         cotizaciones = cotizaciones.filter(cliente__nombre__icontains=cliente)
-#     # CORREGIDO: Eliminado el filtro por vehículo
-#     # if patente:
-#     #    cotizaciones = cotizaciones.filter(vehiculo__patente__icontains=patente)
-
-#     return render(request, 'cotizaciones/cotizacion_list.html', {
-#         'cotizaciones': cotizaciones
-#     })
-
-# APIs para autorelleno (mantener solo la de cliente)
 @require_GET
 def get_cliente_data(request, cliente_id):
     """API para obtener datos del cliente"""
@@ -165,77 +163,84 @@ def get_cliente_data(request, cliente_id):
     except Cliente.DoesNotExist:
         return JsonResponse({'error': 'Cliente no encontrado'}, status=404)
 
-# CORREGIDO: Esta función ya no es necesaria, puedes eliminarla o comentarla
-# @require_GET
-# def get_vehiculos_by_cliente(request, cliente_id):
-#     """API para obtener vehículos de un cliente"""
-#     vehiculos = Vehiculo.objects.filter(cliente_id=cliente_id).values('id', 'patente', 'marca', 'modelo')
-#     return JsonResponse(list(vehiculos), safe=False)
 
 def EditarCotizacion(request, pk):
     cotizacion = get_object_or_404(Cotizacion, pk=pk)
     servicio = cotizacion.servicio
-    
-    # AGREGADO: Obtener items de la cotización
     items = cotizacion.items.all()
     
     if request.method == 'POST':
         form = CotizacionForm(request.POST, request.FILES, instance=cotizacion)
-        if form.is_valid():
-            cotizacion = form.save(commit=False)
+        
+        if not form.is_valid():
+            print("FORM ERRORS (editar):", form.errors)
+            messages.error(request, 'Error al actualizar la cotización. Por favor revise los campos.')
+            return render(request, 'cotizaciones/cotizacion_form.html', {
+                'form': form,
+                'cotizacion': cotizacion,
+                'items': items,
+                'is_edit': True,
+                'servicio': servicio,
+                "today": timezone.now().date(),
+                "validez": (timezone.now() + timedelta(days=30)).date(),
+            })
+        
+        cotizacion = form.save(commit=False)
+        
+        items_data_json = request.POST.get('items_data', '[]')
+        try:
+            items_data = json.loads(items_data_json)
+        except json.JSONDecodeError:
+            items_data = []
+            messages.error(request, "Error en los datos de los items.")
+            return render(request, 'cotizaciones/cotizacion_form.html', {
+                'form': form,
+                'cotizacion': cotizacion,
+                'items': items,
+                'is_edit': True,
+                'servicio': servicio,
+                "today": timezone.now().date(),
+                "validez": (timezone.now() + timedelta(days=30)).date(),
+            })
+        
+        # Eliminar items existentes
+        cotizacion.items.all().delete()
+        
+        # Crear nuevos items
+        subtotal = 0
+        for item_data in items_data:
+            cantidad = float(item_data.get('cantidad', 0))
+            precio_unitario = float(item_data.get('precio_unitario', 0))
+            subtotal += (cantidad * precio_unitario)
             
-            items_data_json = request.POST.get('items_data', '[]')
-            try:
-                items_data = json.loads(items_data_json)
-            except json.JSONDecodeError:
-                items_data = []
-                messages.error(request, "Error en los datos de los items.")
-                return render(request, 'cotizaciones/cotizacion_form.html', {
-                    'form': form,
-                    'cotizacion': cotizacion,
-                    'items': items,  # AGREGADO
-                    'is_edit': True,  # AGREGADO
-                    'servicio': servicio,
-                })
-            
-            # Eliminar items existentes
-            cotizacion.items.all().delete()
-            
-            # Crear nuevos items
-            subtotal = 0
-            for item_data in items_data:
-                cantidad = float(item_data.get('cantidad', 0))
-                precio_unitario = float(item_data.get('precio_unitario', 0))
-                subtotal += (cantidad * precio_unitario)
-                
-                ItemCotizacion.objects.create(
-                    cotizacion=cotizacion,
-                    categoria=item_data.get('categoria', 'Servicios'),
-                    descripcion=item_data.get('descripcion', ''),
-                    cantidad=cantidad,
-                    precio_unitario=precio_unitario
-                )
-            
-            cotizacion.subtotal = subtotal
-            cotizacion.save()
-            
-            messages.success(request, 'Cotización actualizada exitosamente.')
-            return redirect('cotizaciones:listar_cotizaciones')
-        else:
-            messages.error(request, 'Error al actualizar la cotización.')
+            ItemCotizacion.objects.create(
+                cotizacion=cotizacion,
+                categoria=item_data.get('categoria', 'Servicios'),
+                descripcion=item_data.get('descripcion', ''),
+                cantidad=cantidad,
+                precio_unitario=precio_unitario
+            )
+        
+        cotizacion.subtotal = subtotal
+        cotizacion.save()
+        
+        messages.success(request, 'Cotización actualizada exitosamente.')
+        return redirect('cotizaciones:listar_cotizaciones')
+    
     else:
         form = CotizacionForm(instance=cotizacion)
     
-    # CORREGIDO: Pasar items, is_edit y cotizacion al template
     return render(request, 'cotizaciones/cotizacion_form.html', {
         'form': form,
         'cotizacion': cotizacion,
-        'items': items,  # AGREGADO
-        'is_edit': True,  # AGREGADO
+        'items': items,
+        'is_edit': True,
         'servicio': servicio,
+        "today": timezone.now().date(),
+        "validez": (timezone.now() + timedelta(days=30)).date(),
     })
+
     
-# Vista para duplicar cotización
 def DuplicarCotizacion(request, pk):
     cotizacion_original = get_object_or_404(Cotizacion, pk=pk)
     
@@ -244,7 +249,7 @@ def DuplicarCotizacion(request, pk):
         
         if form.is_valid(): 
             nueva_cotizacion = form.save(commit=False)
-            nueva_cotizacion.numero_cotizacion = ''  # Para generar nuevo número
+            nueva_cotizacion.numero_cotizacion = ''
             nueva_cotizacion.estado_cotizacion = 'PENDIENTE'
             nueva_cotizacion.save()
             
@@ -261,7 +266,6 @@ def DuplicarCotizacion(request, pk):
             messages.success(request, "Cotización duplicada exitosamente.")    
             return redirect("cotizaciones:listar_cotizaciones")
     else:
-        # Pre-cargar datos de la cotización original
         initial_data = {
             'empresa_nombre': cotizacion_original.empresa_nombre,
             'empresa_rut': cotizacion_original.empresa_rut,
@@ -283,7 +287,10 @@ def DuplicarCotizacion(request, pk):
         "form": form,
         "clientes": clientes,
         "servicio": cotizacion_original.servicio,
+        "today": timezone.now().date(),
+        "validez": (timezone.now() + timedelta(days=30)).date(),
     })
+
     
 def EliminarCotizacion(request, pk):
     cotizacion = get_object_or_404(Cotizacion, pk=pk)
@@ -296,16 +303,14 @@ def EliminarCotizacion(request, pk):
     
     return redirect("cotizaciones:listar_cotizaciones")
 
+
 def VerPDF(request, pk):
     cotizacion = get_object_or_404(Cotizacion, pk=pk)
-    # Por ahora redirige a la vista de edición
-    # Más adelante puedes implementar la generación de PDF
     messages.info(request, "Funcionalidad de PDF en desarrollo.")
     return redirect("cotizaciones:editar_cotizacion", pk=pk)
-#$$ esta vista dara al boton de ver el historial la posibilidad de descargar y poder generar el pdf que se creo en utlis.py
+
+
 def descargar_pdf_cotizacion(request, cotizacion_id):
-    
-#   se se recoje el id de cliente en el formulario de cotizacion y verifica si exite comparandolo con la bs 
     cotizacion = get_object_or_404(
         Cotizacion.objects.select_related('cliente', 'servicio__vehiculo').prefetch_related('items'),
         id=cotizacion_id
@@ -313,7 +318,6 @@ def descargar_pdf_cotizacion(request, cotizacion_id):
     
     buffer = generar_pdf_cotizacion(cotizacion)
     
-    # Preparar respuesta HTTP con el pdf generado por la funcion de utils o le buffer  
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="cotizacion_{cotizacion.numero_cotizacion}.pdf"'
     response.write(buffer.getvalue())
@@ -328,24 +332,19 @@ def enviar_cotizacion_email(request, cotizacion_id):
         id=cotizacion_id
     )
     
-    # Verificar que el cliente tenga email
     if not cotizacion.cliente or not cotizacion.cliente.email:
         messages.error(request, "El cliente no tiene un email registrado.")
         return redirect('cotizaciones:listar_cotizaciones')
     
     try:
-        # Generar PDF
         buffer = generar_pdf_cotizacion(cotizacion)
         
-        # Renderizar template de email
         html_content = render_to_string('cotizaciones/email_cotizacion.html', {
             'cotizacion': cotizacion,
         })
         
-        # Crear asunto del email
         asunto = f"Cotización N° {cotizacion.numero_cotizacion} - {cotizacion.empresa_nombre or 'Taller Mecánico'}"
         
-        # Crear email
         email = EmailMessage(
             subject=asunto,
             body=html_content,
@@ -353,17 +352,14 @@ def enviar_cotizacion_email(request, cotizacion_id):
             to=[cotizacion.cliente.email],
         )
         
-        # Configurar email como HTML
         email.content_subtype = "html"
         
-        # Adjuntar PDF
         email.attach(
             f'cotizacion_{cotizacion.numero_cotizacion}.pdf',
             buffer.getvalue(),
             'application/pdf'
         )
         
-        # Enviar email
         email.send(fail_silently=False)
         
         messages.success(
