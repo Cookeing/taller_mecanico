@@ -1,49 +1,56 @@
-{% extends "base.html" %} {% block content %}
-<h2 class="mb-3">{{ accion }} vehículo</h2>
-
-{% if form.non_field_errors %}
-<div class="alert alert-danger">{{ form.non_field_errors }}</div>
-{% endif %}
-
-<form method="post" class="card p-3 shadow-sm bg-white" novalidate>
-  {% csrf_token %} {% for field in form %}
-  <div class="mb-3">
-    <label class="form-label">
-      {{ field.label }} {% if field.field.required %}
-      <span class="text-danger">*</span>
-      {% endif %}
-    </label>
-
-    {% if field.name == 'cliente' %}
-    <div class="d-flex gap-2">
-      {{ field }}
-      <a
-        href="{% url 'clientes:create' %}?next={{ request.path }}"
-        class="btn btn-outline-success"
-        onclick="abrirPopupCliente(event)"
-        title="Agregar nuevo cliente"
-      >
-        +
-      </a>
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <div class="card shadow-sm border-0">
+    <div class="card-header bg-dark text-white">
+      <h4 class="mb-0">{{ accion }} vehículo</h4>
     </div>
-    <small class="text-muted">
-      Haz clic en <strong>+</strong> para agregar un cliente nuevo
-    </small>
-    {% else %} {{ field }} {% endif %} {% if field.errors %} {% for error in field.errors %}
-    <div class="text-danger small mt-1">{{ error }}</div>
-    {% endfor %}{% endif %} {% if field.help_text %}
-    <small class="form-text text-muted">{{ field.help_text }}</small>
-    {% endif %}
-  </div>
-  {% endfor %}
+    <div class="card-body">
+      {% if form.non_field_errors %}
+      <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+      {% endif %}
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="mb-3">
+          <label class="form-label fw-semibold">
+            {{ field.label }}
+            {% if field.field.required %}
+            <span class="text-danger">*</span>
+            {% endif %}
+          </label>
+          {% if field.name == 'cliente' %}
+          <div class="d-flex gap-2">
+            {{ field }}
+            <a href="{% url 'clientes:create' %}?next={{ request.path }}" class="btn btn-outline-success" onclick="abrirPopupCliente(event)" title="Agregar nuevo cliente">+</a>
+          </div>
+          <small class="text-muted">Haz clic en <strong>+</strong> para agregar un cliente nuevo</small>
+          {% else %}
+          {{ field }}
+          {% endif %}
+          {% if field.errors %}
+            {% for error in field.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          {% endif %}
+          {% if field.help_text %}
+          <small class="form-text text-muted">{{ field.help_text }}</small>
+          {% endif %}
+        </div>
+        {% endfor %}
 
-  <div class="d-flex gap-2">
-    <input type="submit" value="💾 Guardar" class="btn btn-primary" />
-    <a href="{% url 'vehiculos:list' %}" class="btn btn-secondary">
-      ⬅️ Volver
-    </a>
+        <div class="d-flex justify-content-between mt-4">
+          <a href="{% url 'vehiculos:list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+          </a>
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
-</form>
+</div>
 
 <script>
   function abrirPopupCliente(e) {

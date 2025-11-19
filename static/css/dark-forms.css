@@ -1,0 +1,36 @@
+/* Estilos para formularios en modo oscuro */
+
+html[data-theme="dark"] input::placeholder {
+  color: #ffffff !important;
+  opacity: 0.9 !important;
+}
+
+html[data-theme="dark"] textarea::placeholder {
+  color: #ffffff !important;
+  opacity: 0.9 !important;
+}
+
+html[data-theme="dark"] select::placeholder {
+  color: #ffffff !important;
+  opacity: 0.9 !important;
+}
+
+html[data-theme="dark"] ::-webkit-input-placeholder {
+  color: #ffffff !important;
+  opacity: 0.9 !important;
+}
+
+html[data-theme="dark"] ::-moz-placeholder {
+  color: #ffffff !important;
+  opacity: 0.9 !important;
+}
+
+html[data-theme="dark"] :-ms-input-placeholder {
+  color: #ffffff !important;
+  opacity: 0.9 !important;
+}
+
+html[data-theme="dark"] :-moz-placeholder {
+  color: #ffffff !important;
+  opacity: 0.9 !important;
+}

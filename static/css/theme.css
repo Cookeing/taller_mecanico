@@ -1185,10 +1185,48 @@ html[data-theme="dark"] select.form-select {
   background-image: var(--select-caret-dark);
 }
 
-html[data-theme="dark"] ::placeholder {
-  color: var(--text-secondary);
-  opacity: 0.7;
+/* Estilos específicos para placeholders en modo oscuro */
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder,
+html[data-theme="dark"] select::placeholder {
+  color: #a0a0a0 !important;
+  opacity: 1 !important;
 }
+
+html[data-theme="dark"] ::placeholder {
+  color: #a0a0a0 !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="dark"] .form-control,
+html[data-theme="dark"] .form-select,
+html[data-theme="dark"] input[type="text"],
+html[data-theme="dark"] input[type="email"],
+html[data-theme="dark"] input[type="number"],
+html[data-theme="dark"] input[type="date"],
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  background-color: #1a2a35 !important;
+  color: #f0f0f0 !important;
+  border-color: #3a4a52 !important;
+}
+
+html[data-theme="dark"] .form-control::placeholder,
+html[data-theme="dark"] .form-select::placeholder,
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: #a0a0a0 !important;
+  opacity: 1 !important;
+}
+
+.form-text {
+  color: #dc3545;
+}
+
+html[data-theme="dark"] .form-text {
+  color: #ff6b6b !important;
+}
+
 
 /* ================================================================
    BADGES
