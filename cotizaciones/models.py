@@ -5,6 +5,9 @@ from django.core.validators import MinValueValidator
 from clientes.models import Cliente
 from servicios.models import Servicio
 from django.utils import timezone
+from django.utils.html import strip_tags
+from urllib.parse import quote
+
 
 
 class Cotizacion(models.Model):
@@ -237,6 +240,18 @@ class Cotizacion(models.Model):
     def __str__(self):
         cliente_nombre = self.cliente.nombre if self.cliente else "Sin cliente"
         return f'Cotización {self.numero_cotizacion} - {cliente_nombre}'
+    
+    def get_mensaje_whatsapp(self):
+        cliente = self.cliente.nombre if self.cliente else "cliente"
+        fecha = self.fecha_emision.strftime('%d/%m/%Y') if self.fecha_emision else ''
+        numero = self.numero_cotizacion or ""
+        total = f"${self.monto_total:,.0f}".replace(",", ".")
+
+        return (
+            f"Hola {cliente}, te enviamos tu cotización N°{numero} del {fecha} "
+            f"por un total de {total}.\n\n"
+            "Revisa el documento y contáctanos si deseas continuar con el servicio. ¡Gracias!"
+        )
 
 
 class ItemCotizacion(models.Model):
@@ -286,3 +301,5 @@ class ItemCotizacion(models.Model):
     
     def __str__(self):
         return f"{self.descripcion} - ${self.precio_unitario}"
+
+

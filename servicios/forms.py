@@ -83,7 +83,9 @@ class DocumentoForm(forms.ModelForm):
         widgets = {
             'fecha_documento': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'tipo_documento': forms.Select(attrs={'class': 'form-select'}),
-            'monto': forms.NumberInput(attrs={'class': 'form-control'}),
+            'monto': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Monto (Ej: 15000)'}),
             'archivo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
 
