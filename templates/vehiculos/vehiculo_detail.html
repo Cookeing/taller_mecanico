@@ -35,9 +35,9 @@
       <thead class="table-dark">
         <tr>
           <th class="text-center">Fecha</th>
-          <th>Descripción</th>
+          <th class="text-center">Descripción</th>
           <th class="text-center">Estado</th>
-          <th class="text-end">Total</th>
+          <th class="text-center">Total</th>
           <th class="text-center">Fotos</th>
           <th class="text-center">Acciones</th>
         </tr>
@@ -46,7 +46,11 @@
         {% for s in servicios %}
         <tr>
           <td class="text-center">{{ s.fecha_servicio|date:"d-m-Y" }}</td>
-          <td>{{ s.descripcion_trabajo|default:"(Sin descripción)" }}</td>
+          <td class="text-center">
+            <a href="{% url 'servicios:documentos_servicio' s.id %}" class="btn btn-sm btn-info" title="Ver detalle del servicio">
+              <i class="bi bi-file-earmark-text me-1"></i> Detalle
+            </a>
+          </td>
           <td class="text-center">
             {% if s.estado == "proceso" %}
             <span class="badge bg-warning text-dark">En proceso</span>
@@ -62,7 +66,7 @@
             >
             {% endif %}
           </td>
-          <td class="text-end fw-bold">
+          <td class="text-center fw-bold">
             ${{ s.total|floatformat:0|intcomma }}
           </td>
           <td class="text-center">
@@ -70,7 +74,7 @@
           </td>
           <td class="text-center">
             <a href="{% url 'servicios:fotos_servicio' s.id %}" class="btn btn-sm btn-primary" title="Ver y gestionar fotos">
-              <i class="bi bi-camera"></i> Subir Fotos
+              <i class="bi bi-camera me-1"></i> Subir Fotos
             </a>
           </td>
         </tr>
@@ -78,7 +82,7 @@
         <!-- Galería de fotos debajo del servicio -->
         {% if s.fotos.exists %}
         <tr>
-          <td colspan="6" class="bg-light">
+          <td colspan="6" class="foto-servicio-bg">
             <div class="p-2">
               <h6 class="mb-2"><i class="bi bi-images"></i> Fotos del Servicio</h6>
               <div class="row g-2">
@@ -113,7 +117,9 @@
                 
                 {% if s.fotos.count > 6 %}
                   <div class="col-6 col-md-2">
-                    <a href="{% url 'servicios:fotos_servicio' s.id %}" class="d-flex align-items-center justify-content-center text-decoration-none" style="height: 100px; background-color: #e9ecef; border-radius: 4px;">
+                    <a href="{% url 'servicios:fotos_servicio' s.id %}" 
+                      class="d-flex align-items-center justify-content-center text-decoration-none rounded p-2 bg-light-subtle dark:bg-dark-subtle"
+                      style="height: 100px;">
                       <span class="text-center">
                         <i class="bi bi-plus-circle" style="font-size: 2rem;"></i><br>
                         <small>+{{ s.fotos.count|add:"-6" }} más</small>
