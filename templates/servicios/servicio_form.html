@@ -25,6 +25,7 @@
         <div class="mb-3">
           <label for="id_vehiculo" class="form-label fw-semibold">Vehículo: <span class="text-danger">*</span></label>
           {{ form.vehiculo }}
+                    <a href="{% url 'vehiculos:crear' %}?popup=1"class="btn btn-outline-success" onclick="abrirPopupVehiculo(event)" title="Agregar nuevo vehículo">+ Registrar un vehiculo</a>
           {% if form.vehiculo.errors %}
             <div class="text-danger small mt-1">{{ form.vehiculo.errors|join:", " }}</div>
           {% endif %}
@@ -70,4 +71,30 @@
     </div>
   </div>
 </div>
+<script>
+function abrirPopupVehiculo(e) {
+    e.preventDefault();
+
+    const width = 600;
+    const height = 700;
+    const left = (screen.width - width) / 2;
+    const top = (screen.height - height) / 2;
+
+    const popup = window.open(
+        e.target.closest("a").href,
+        "nuevoVehiculo",
+        `width=${width},height=${height},left=${left},top=${top}`
+    );
+
+    // Cuando el popup se cierre, recargar el formulario para actualizar el select
+    const check = setInterval(() => {
+        if (popup.closed) {
+            clearInterval(check);
+            location.reload();
+        }
+    }, 500);
+}
+</script>
 {% endblock %}
+
+
