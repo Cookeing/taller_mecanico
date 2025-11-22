@@ -17,6 +17,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+#urls para login y logout
+LOGIN_REDIRECT_URL = "/home/"  # o tu vista principal
+LOGOUT_REDIRECT_URL = "/login/"
+
 
 # Application definition
 

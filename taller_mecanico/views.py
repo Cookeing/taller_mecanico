@@ -1,7 +1,10 @@
 from django.shortcuts import render
 from django.db.models import Sum
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required
 
+
+@login_required
 def home(request):
     """
     Vista principal del dashboard con estadísticas reales
