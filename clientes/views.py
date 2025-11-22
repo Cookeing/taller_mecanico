@@ -1,27 +1,19 @@
-"""
-Vistas de la aplicación Clientes (CRUD) y endpoint de búsqueda (HU02).
-Reemplaza completamente clientes/views.py con este contenido.
-"""
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
+from django.contrib import messages
+from django.utils import timezone
 from .models import Cliente
 from .forms import ClienteForm
 
 
 def cliente_list(request):
-    """
-    Muestra la lista de clientes ordenados por nombre.
-    Si se pasa el parámetro GET 'q', devuelve la lista filtrada (case-insensitive).
-    Esta vista se usa como la página principal de clientes y soporta búsqueda server-side.
-
-    """
+    """Muestra solo clientes activos"""
     q = request.GET.get('q', '').strip()
     if q:
-        clientes = Cliente.objects.filter(nombre__icontains=q).order_by('nombre')
+        clientes = Cliente.objects.filter(activo=True, nombre__icontains=q).order_by('nombre')
     else:
-        clientes = Cliente.objects.all().order_by('nombre')
+        clientes = Cliente.objects.filter(activo=True).order_by('nombre')
     return render(request, 'clientes/cliente_list.html', {'clientes': clientes, 'query': q})
 
 
@@ -31,6 +23,7 @@ def cliente_create(request):
         form = ClienteForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, '✅ Cliente creado exitosamente.')
             return redirect('clientes:list')
     else:
         form = ClienteForm()
@@ -44,6 +37,7 @@ def cliente_update(request, pk: int):
         form = ClienteForm(request.POST, instance=cliente)
         if form.is_valid():
             form.save()
+            messages.success(request, '✅ Cliente actualizado exitosamente.')
             return redirect('clientes:list')
     else:
         form = ClienteForm(instance=cliente)
@@ -51,26 +45,49 @@ def cliente_update(request, pk: int):
 
 
 def cliente_delete(request, pk: int):
-    """Elimina un cliente con confirmación previa."""
+    """Desactiva un cliente (soft delete)"""
     cliente = get_object_or_404(Cliente, pk=pk)
+    
+    # Contar vehículos activos
+    vehiculos_activos = cliente.vehiculos.filter(activo=True)
+    
     if request.method == 'POST':
-        cliente.delete()
+        cliente.activo = False
+        cliente.fecha_eliminacion = timezone.now()
+        cliente.save()
+        messages.success(request, f'✅ Cliente {cliente.nombre} desactivado exitosamente.')
         return redirect('clientes:list')
-    return render(request, 'clientes/cliente_confirm_delete.html', {'cliente': cliente})
+    
+    return render(request, 'clientes/cliente_confirm_delete.html', {
+        'cliente': cliente,
+        'vehiculos_activos': vehiculos_activos
+    })
 
 
 @require_GET
 def buscar_clientes_api(request):
-    """
-    Endpoint JSON para búsqueda dinámica (live search).
-    Recibe GET 'q' y devuelve una lista JSON con campos id, nombre, rut, telefono.
-    Ejemplo: GET /clientes/api/buscar/?q=juan
-    """
+    """API para búsqueda - solo clientes activos"""
     q = request.GET.get('q', '').strip()
-    
     if not q:
-        # Retornar lista vacía para evitar exponer todo el catálogo en cada pulsación
         return JsonResponse([], safe=False)
-    qs = Cliente.objects.filter(nombre__icontains=q).order_by('nombre')[:50]
+    qs = Cliente.objects.filter(activo=True, nombre__icontains=q).order_by('nombre')[:50]
     data = list(qs.values('id', 'nombre', 'rut', 'telefono'))
     return JsonResponse(data, safe=False)
+
+
+def clientes_inactivos(request):
+    """Vista para gestionar clientes inactivos"""
+    clientes = Cliente.objects.filter(activo=False).order_by('-fecha_eliminacion')
+    return render(request, 'clientes/clientes_inactivos.html', {'clientes': clientes})
+
+
+def cliente_reactivar(request, pk: int):
+    """Reactiva un cliente inactivo"""
+    cliente = get_object_or_404(Cliente, pk=pk, activo=False)
+    if request.method == 'POST':
+        cliente.activo = True
+        cliente.fecha_eliminacion = None
+        cliente.save()
+        messages.success(request, f'✅ Cliente {cliente.nombre} reactivado exitosamente.')
+        return redirect('clientes:inactivos')
+    return render(request, 'clientes/cliente_confirm_reactivar.html', {'cliente': cliente})

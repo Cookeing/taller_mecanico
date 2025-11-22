@@ -1,4 +1,5 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
+{% block content %}
 <div class="container py-4">
   <div class="card shadow-sm border-0">
     <div class="card-header bg-dark text-white">
@@ -6,7 +7,6 @@
     </div>
 
     <div class="card-body">
-      <!-- Mostrar mensajes de error generales -->
       {% if form.errors %}
       <div class="alert alert-danger">
         <strong>Corrige los siguientes errores:</strong>
@@ -23,47 +23,38 @@
 
         <!-- Vehículo -->
         <div class="mb-3">
-          <label for="id_vehiculo" class="form-label fw-semibold"
-            >Vehículo:</label
-          >
+          <label for="id_vehiculo" class="form-label fw-semibold">Vehículo: <span class="text-danger">*</span></label>
           {{ form.vehiculo }}
+          {% if form.vehiculo.errors %}
+            <div class="text-danger small mt-1">{{ form.vehiculo.errors|join:", " }}</div>
+          {% endif %}
         </div>
 
         <!-- Descripción -->
         <div class="mb-3">
-          <label for="id_descripcion_trabajo" class="form-label fw-semibold"
-            >Descripción del trabajo:</label
-          >
+          <label for="id_descripcion_trabajo" class="form-label fw-semibold">Descripción del trabajo: <span class="text-danger">*</span></label>
           {{ form.descripcion_trabajo }}
+          {% if form.descripcion_trabajo.errors %}
+            <div class="text-danger small mt-1">{{ form.descripcion_trabajo.errors|join:", " }}</div>
+          {% endif %}
         </div>
 
         <!-- Fecha -->
         <div class="mb-3">
-          <label for="id_fecha_servicio" class="form-label fw-semibold"
-            >Fecha del servicio:</label
-          >
+          <label for="id_fecha_servicio" class="form-label fw-semibold">Fecha del servicio: <span class="text-danger">*</span></label>
           {{ form.fecha_servicio }}
+          {% if form.fecha_servicio.errors %}
+            <div class="text-danger small mt-1">{{ form.fecha_servicio.errors|join:", " }}</div>
+          {% endif %}
         </div>
 
         <!-- Estado -->
         <div class="mb-3">
           <label for="id_estado" class="form-label fw-semibold">Estado:</label>
           {{ form.estado }}
-        </div>
-
-        <!-- Total -->
-        <div class="mb-3">
-          <label for="id_total" class="form-label fw-semibold"
-            >Total ($):</label
-          >
-          <div class="input-group">
-            <span class="input-group-text">$</span>
-            {{ form.total }}
-          </div>
-          <div class="form-text text-muted">
-            Ingrese el monto con o sin puntos de miles. Ejemplo:
-            <code>15.000</code> o <code>15000</code>
-          </div>
+          {% if form.estado.errors %}
+            <div class="text-danger small mt-1">{{ form.estado.errors|join:", " }}</div>
+          {% endif %}
         </div>
 
         <!-- Botones -->

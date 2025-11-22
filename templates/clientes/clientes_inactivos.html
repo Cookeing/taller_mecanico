@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Clientes Inactivos{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Clientes Inactivos</h2>
+        <a href="{% url 'clientes:list' %}" class="btn btn-primary">← Volver a Activos</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>RUT</th>
+                    <th>Teléfono</th>
+                    <th>Fecha Desactivación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cliente in clientes %}
+                <tr>
+                    <td>{{ cliente.nombre }}</td>
+                    <td>{{ cliente.rut }}</td>
+                    <td>{{ cliente.telefono }}</td>
+                    <td>{{ cliente.fecha_eliminacion|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        <form method="POST" action="{% url 'clientes:reactivar' cliente.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('¿Reactivar este cliente?')">
+                                ✓ Reactivar
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">No hay clientes inactivos.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

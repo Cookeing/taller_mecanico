@@ -1,36 +1,114 @@
-/* Estilos para formularios en modo oscuro */
+/* ======= Tus reglas para placeholders (NO TOCAR) ======= */
+html[data-theme="dark"] input::placeholder { color: #ffffff !important; opacity: 0.9 !important; }
+html[data-theme="dark"] textarea::placeholder { color: #ffffff !important; opacity: 0.9 !important; }
+html[data-theme="dark"] select::placeholder { color: #ffffff !important; opacity: 0.9 !important; }
+html[data-theme="dark"] ::-webkit-input-placeholder { color: #ffffff !important; opacity: 0.9 !important; }
+html[data-theme="dark"] ::-moz-placeholder { color: #ffffff !important; opacity: 0.9 !important; }
+html[data-theme="dark"] :-ms-input-placeholder { color: #ffffff !important; opacity: 0.9 !important; }
+html[data-theme="dark"] :-moz-placeholder { color: #ffffff !important; opacity: 0.9 !important; }
 
-html[data-theme="dark"] input::placeholder {
-  color: #ffffff !important;
-  opacity: 0.9 !important;
+/* ======= MODO OSCURO REAL EN TARJETAS Y FORMULARIOS ======= */
+html[data-theme="dark"] body,
+html[data-theme="dark"] .container,
+html[data-theme="dark"] .main-content {
+  background-color: #23282e !important;
+  color: #eceff1 !important;
 }
 
-html[data-theme="dark"] textarea::placeholder {
-  color: #ffffff !important;
-  opacity: 0.9 !important;
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .card-body,
+html[data-theme="dark"] .table,
+html[data-theme="dark"] .modal-content {
+  background: #272f36 !important;
+  color: #eceff1 !important;
+  border-color: #37474f !important;
 }
 
-html[data-theme="dark"] select::placeholder {
-  color: #ffffff !important;
-  opacity: 0.9 !important;
+html[data-theme="dark"] .card-header,
+html[data-theme="dark"] .card-footer {
+  background-color: #37474f !important;
+  color: #eceff1 !important;
+  border-color: #48505a !important;
 }
 
-html[data-theme="dark"] ::-webkit-input-placeholder {
-  color: #ffffff !important;
-  opacity: 0.9 !important;
+/* Formularios y inputs */
+html[data-theme="dark"] .form-control,
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  background: #23282e !important;
+  color: #eceff1 !important;
+  border-color: #48505a !important;
 }
 
-html[data-theme="dark"] ::-moz-placeholder {
-  color: #ffffff !important;
-  opacity: 0.9 !important;
+html[data-theme="dark"] th,
+html[data-theme="dark"] td {
+  color: #eceff1 !important;
 }
 
-html[data-theme="dark"] :-ms-input-placeholder {
-  color: #ffffff !important;
-  opacity: 0.9 !important;
+html[data-theme="dark"] label,
+html[data-theme="dark"] .form-label,
+html[data-theme="dark"] .text-muted,
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] h5,
+html[data-theme="dark"] h6 {
+  color: #eceff1 !important;
 }
 
-html[data-theme="dark"] :-moz-placeholder {
-  color: #ffffff !important;
-  opacity: 0.9 !important;
+/* Alertas (Bootstrap) */
+html[data-theme="dark"] .alert-warning {
+  background: #4d4835 !important;
+  color: #fff7bf !important;
+  border-color: #cab867 !important;
+}
+html[data-theme="dark"] .alert-danger {
+  background: #502828 !important;
+  color: #ffb5b5 !important;
+  border-color: #b94a48 !important;
+}
+html[data-theme="dark"] .alert-info {
+  background: #2a3b45 !important;
+  color: #b7e1ff !important;
+  border-color: #5bc0de !important;
+}
+html[data-theme="dark"] .alert,
+html[data-theme="dark"] .alert-light {
+  background: #323943 !important;
+  color: #eceff1 !important;
+  border-color: #48505a !important;
+}
+
+/* Botones */
+html[data-theme="dark"] .btn-danger {
+  background: #c0392b !important;
+  border-color: #c0392b !important;
+}
+html[data-theme="dark"] .btn-outline-secondary {
+  background: transparent !important;
+  color: #eceff1 !important;
+  border-color: #48505a !important;
+}
+html[data-theme="dark"] .btn-outline-secondary:hover {
+  background: #48505a !important;
+  color: #fff !important;
+}
+
+/* Asegura que todos los inputs, selects y textarea sean oscuros */
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  background-color: #23282e !important;
+  color: #eceff1 !important;
+}
+
+/* Forzar el fondo y bordes de cualquier cuadro anidado */
+html[data-theme="dark"] .shadow-sm,
+html[data-theme="dark"] .border-danger,
+html[data-theme="dark"] .border,
+html[data-theme="dark"] .rounded {
+  background: #263238 !important;
+  border-color: #37474f !important;
 }

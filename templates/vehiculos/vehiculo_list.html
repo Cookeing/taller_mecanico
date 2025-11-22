@@ -1,34 +1,20 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
+{% block content %}
 <div class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Vehículos</h2>
     <div>
-      <a href="{% url 'vehiculos:crear' %}" class="btn btn-primary">
-        Nuevo Vehículo
-      </a>
+      <a href="{% url 'vehiculos:crear' %}" class="btn btn-primary me-2">Nuevo Vehículo</a>
+      <a href="{% url 'vehiculos:inactivos' %}" class="btn btn-outline-warning">Vehiculos Inactivos</a>
     </div>
   </div>
 
-  <!-- Barra de búsqueda por cliente -->
   <div class="mb-3">
-    <input
-      id="search-client-input"
-      type="search"
-      class="form-control"
-      placeholder="Buscar vehículos por nombre o RUT del cliente..."
-      aria-label="Buscar por cliente"
-    />
+    <input id="search-client-input" type="search" class="form-control" placeholder="Buscar vehículos por nombre o RUT del cliente..." aria-label="Buscar por cliente" />
   </div>
 
-  <!-- Barra de búsqueda por patente -->
   <div class="mb-3">
-    <input
-      id="search-vehiculo-input"
-      type="search"
-      class="form-control"
-      placeholder="Buscar vehículos por patente..."
-      aria-label="Buscar por patente"
-    />
+    <input id="search-vehiculo-input" type="search" class="form-control" placeholder="Buscar vehículos por patente..." aria-label="Buscar por patente" />
   </div>
 
   <div class="table-responsive">
@@ -50,21 +36,11 @@
           <td>{{ v.marca|default:"-" }}</td>
           <td>{{ v.modelo|default:"-" }}</td>
           <td>{{ v.cliente.nombre }}</td>
-          <td>{{ v.cliente.rut }}</td>
-
+          <td>{% if not v.cliente.rut %}Sin rut{% else %}{{ v.cliente.rut }}{% endif %}</td>
           <td>
-            <a
-              href="{% url 'vehiculos:detail' v.pk %}"
-              class="btn btn-sm btn-outline-primary"
-              >Ver</a
-            >
-            <a
-              href="{% url 'vehiculos:update' v.pk %}"
-              class="btn btn-sm btn-outline-secondary"
-              >Editar</a
-            >
-
-            >
+            <a href="{% url 'vehiculos:detail' v.pk %}" class="btn btn-sm btn-outline-primary">Ver</a>
+            <a href="{% url 'vehiculos:update' v.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+            <a href="{% url 'vehiculos:delete' v.pk %}" class="btn btn-sm btn-outline-danger">Eliminar</a>
           </td>
         </tr>
         {% empty %}
@@ -76,8 +52,7 @@
     </table>
   </div>
 </div>
-
-{# Cargar módulo de búsqueda de vehículos #} {% load static %}
+{% load static %}
 <script src="{% static 'js/Busqueda_Vehiculo.js' %}"></script>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
@@ -85,8 +60,7 @@
       clientInputId: "search-client-input",
       vehiculoInputId: "search-vehiculo-input",
       resultsBodyId: "results-body",
-      apiVehiculosPorCliente:
-        "{% url 'vehiculos:buscar_por_cliente_api' cliente_id=0 %}",
+      apiVehiculosPorCliente: "{% url 'vehiculos:buscar_por_cliente_api' cliente_id=0 %}",
       apiVehiculosPorPatente: "{% url 'vehiculos:buscar_api' %}",
       debounceDelay: 300,
       detailUrlPattern: "/vehiculos/{id}/",

@@ -1,6 +1,5 @@
 {% extends "base.html" %}
-
-{% block title %}Confirmar eliminación - {{ vehiculo.patente }}{% endblock %}
+{% block title %}Confirmar desactivación - {{ vehiculo.patente }}{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -10,7 +9,7 @@
                 <div class="card-header bg-danger text-white">
                     <h2 class="h4 mb-0">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        Confirmar eliminación
+                        Confirmar desactivación de vehículo
                     </h2>
                 </div>
                 <div class="card-body">
@@ -18,51 +17,70 @@
                         <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
                         <div>
                             <h4 class="alert-heading mb-1">¡Atención!</h4>
-                            Estás a punto de eliminar un vehículo permanentemente.
+                            Estás a punto de desactivar un vehículo.
                         </div>
                     </div>
                     
                     <div class="mb-4">
                         <h5 class="text-muted mb-3">Detalles del vehículo:</h5>
                         <div class="table-responsive">
-                            <table class="table table-sm table-borderless">
+                            <table class="table table-sm table-borderless" style="background: transparent; color: inherit;">
                                 <tbody>
                                     <tr>
-                                        <th class="text-end pe-3">Patente:</th>
-                                        <td><strong>{{ vehiculo.patente }}</strong></td>
+                                        <th class="text-end pe-3" style="width: 40%; background: transparent; color: inherit;">Patente:</th>
+                                        <td style="background: transparent; color: inherit;"><strong>{{ vehiculo.patente }}</strong></td>
                                     </tr>
                                     <tr>
-                                        <th class="text-end pe-3">ID:</th>
-                                        <td>{{ vehiculo.id }}</td>
+                                        <th class="text-end pe-3" style="background: transparent; color: inherit;">Cliente:</th>
+                                        <td style="background: transparent; color: inherit;"><strong>{{ vehiculo.cliente.nombre }}</strong></td>
                                     </tr>
+                                    {% if vehiculo.cliente.rut %}
+                                    <tr>
+                                        <th class="text-end pe-3" style="background: transparent; color: inherit;">RUT Cliente:</th>
+                                        <td style="background: transparent; color: inherit;">{{ vehiculo.cliente.rut }}</td>
+                                    </tr>
+                                    {% endif %}
                                     {% if vehiculo.marca %}
                                     <tr>
-                                        <th class="text-end pe-3">Marca:</th>
-                                        <td>{{ vehiculo.marca }}</td>
+                                        <th class="text-end pe-3" style="background: transparent; color: inherit;">Marca:</th>
+                                        <td style="background: transparent; color: inherit;">{{ vehiculo.marca }}</td>
                                     </tr>
                                     {% endif %}
                                     {% if vehiculo.modelo %}
                                     <tr>
-                                        <th class="text-end pe-3">Modelo:</th>
-                                        <td>{{ vehiculo.modelo }}</td>
+                                        <th class="text-end pe-3" style="background: transparent; color: inherit;">Modelo:</th>
+                                        <td style="background: transparent; color: inherit;">{{ vehiculo.modelo }}</td>
                                     </tr>
                                     {% endif %}
-                                    {% if vehiculo.año %}
+                                    {% if vehiculo.anio %}
                                     <tr>
-                                        <th class="text-end pe-3">Año:</th>
-                                        <td>{{ vehiculo.año }}</td>
+                                        <th class="text-end pe-3" style="background: transparent; color: inherit;">Año:</th>
+                                        <td style="background: transparent; color: inherit;">{{ vehiculo.anio }}</td>
                                     </tr>
                                     {% endif %}
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                    
-                    <div class="alert alert-danger" role="alert">
-                        <i class="bi bi-info-circle-fill me-2"></i>
-                        <strong>Esta acción no se puede deshacer.</strong> Todos los datos relacionados con este vehículo se perderán permanentemente.
+
+                    {% if servicios_count > 0 %}
+                        <div class="alert alert-info" role="alert">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            <strong>Importante:</strong> Este vehículo tiene <strong>{{ servicios_count }}</strong> servicio(s) asociado(s).
+                            Al desactivarlo, el vehículo quedará oculto pero <strong>los servicios se mantendrán intactos</strong> en el historial.
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            Este vehículo no tiene servicios asociados.
+                        </div>
+                    {% endif %}
+
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-info-circle me-2"></i>
+                        El vehículo será <strong>desactivado</strong> (no eliminado). Todos sus datos se mantendrán intactos.
                     </div>
-                    
+
                     <form method="post" id="deleteForm">
                         {% csrf_token %}
                         <div class="d-flex flex-column flex-md-row gap-3 justify-content-end">
@@ -72,7 +90,7 @@
                             </a>
                             <button type="submit" class="btn btn-danger" id="deleteButton">
                                 <i class="bi bi-trash-fill me-1"></i>
-                                Sí, eliminar vehículo
+                                Sí, desactivar vehículo
                             </button>
                         </div>
                     </form>
@@ -88,14 +106,10 @@
     document.addEventListener('DOMContentLoaded', function() {
         const deleteForm = document.getElementById('deleteForm');
         const deleteButton = document.getElementById('deleteButton');
-        
-        // Prevenir envío múltiple del formulario
         deleteForm.addEventListener('submit', function() {
             deleteButton.disabled = true;
-            deleteButton.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Eliminando...';
+            deleteButton.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Desactivando...';
         });
-        
-        // Confirmación adicional con tecla Escape
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 window.location.href = "{% url 'vehiculos:list' %}";

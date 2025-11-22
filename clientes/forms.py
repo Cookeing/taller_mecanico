@@ -1,5 +1,3 @@
-"""Formularios de la aplicación Clientes."""
-
 from django import forms
 from .models import Cliente, normalizar_rut
 
@@ -13,9 +11,9 @@ class ClienteForm(forms.ModelForm):
                 "required": "required"
             }),
             "rut": forms.TextInput(attrs={
-                "class": "form-control", 
+                "class": "form-control",
                 "placeholder": "12.345.678-5",
-                "onblur": "validarRut(this)"
+                # Solo deja el formateo JS, sin validación
             }),
             "telefono": forms.TextInput(attrs={
                 "class": "form-control",
@@ -37,7 +35,6 @@ class ClienteForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Hacer solo el nombre obligatorio en el frontend
         self.fields['nombre'].required = True
         self.fields['rut'].required = False
         self.fields['telefono'].required = False
@@ -48,13 +45,10 @@ class ClienteForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         rut = cleaned_data.get("rut")
-        
-        # Validar RUT solo si está presente
         if rut:
             rut = normalizar_rut(rut)
             cleaned_data["rut"] = rut
             qs = Cliente.objects.exclude(pk=getattr(self.instance, "pk", None)).filter(rut=rut)
             if qs.exists():
                 self.add_error("rut", "Ya existe un cliente con ese RUT.")
-                
         return cleaned_data
