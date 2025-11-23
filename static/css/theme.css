@@ -702,8 +702,8 @@ html[data-theme="dark"] .btn--outline {
   --bg-surface: #FFFFFF;
   --bg-hover: #B5E2FA; /* Azul Claro (Acento) */
   
-  --text-primary: #37474F;
-  --text-secondary: #B0BEC5; /* << CORRECCIÓN PARA MODO CLARO */
+  --text-primary: #263238; /* Oscurecido para mejor contraste */
+  --text-secondary: #546E7A; /* Oscurecido para mejor legibilidad */
   
   --color-primary: #2B4C7E;
   --color-primary-hover: #1e3a5f; /* Oscurecido */
@@ -788,6 +788,16 @@ a {
 }
 
 a:hover { color: var(--color-primary-hover); }
+
+.text-muted,
+small {
+  color: var(--text-secondary);
+}
+
+html[data-theme="light"] .text-muted,
+html[data-theme="light"] small {
+  color: #546E7A !important;
+}
 
 html[data-theme="dark"] .text-muted,
 html[data-theme="dark"] small {
@@ -1238,7 +1248,7 @@ html[data-theme="dark"] .form-text {
   border-radius: var(--radius-full);
   font-size: var(--font-size-sm);
   display: inline-flex;
-  align-items: center; /* Corregido (tenía 'align-itemss') */
+  align-items: center;
   border: none;
 }
 

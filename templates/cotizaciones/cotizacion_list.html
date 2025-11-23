@@ -187,8 +187,9 @@
             <div class="text-muted">
               <i class="bi bi-inbox fs-1"></i>
               <p class="mt-2">No hay cotizaciones registradas.</p>
-              <a href="{% url 'cotizaciones:registrar_cotizacion' %}" class="btn btn-primary mt-2">
-                <i class="bi bi-plus-circle"></i> Crear Primera Cotización
+              <p class="small">Las cotizaciones se crean desde los servicios.</p>
+              <a href="{% url 'servicios:list' %}" class="btn btn-primary mt-2">
+                <i class="bi bi-wrench"></i> Ir a Servicios
               </a>
             </div>
           </td>
