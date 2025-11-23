@@ -84,4 +84,47 @@
   </div>
 </div>
 <script src="{% static 'js/validacion_rut.js' %}"></script>
+<script>
+  // Enforce teléfono input formatting: only digits and optional leading +
+  (function() {
+    const tel = document.querySelector('input[name="telefono"]');
+    if (!tel) return;
+
+    function cleanValue(value) {
+      // allow leading +, then digits and spaces; remove other chars
+      value = String(value || '');
+      // keep leading + if present
+      const leadingPlus = value.trim().startsWith('+');
+      let digits = value.replace(/[^0-9]/g, '');
+      if (leadingPlus) digits = '+' + digits;
+      return digits;
+    }
+
+    tel.addEventListener('input', function(e) {
+      const cursor = tel.selectionStart;
+      const cleaned = cleanValue(tel.value);
+      tel.value = cleaned;
+      try { tel.setSelectionRange(cursor, cursor); } catch (err) {}
+    });
+
+    // On blur, normalize common formats (remove leading zeros, keep +56 or prepend 56 if starts with 9)
+    tel.addEventListener('blur', function() {
+      let v = tel.value || '';
+      v = v.replace(/\s+/g, '');
+      if (v.startsWith('+')) {
+        // +56... -> keep as +56...
+        // remove any accidental extra pluses
+        v = '+' + v.replace(/[^0-9]/g, '');
+      } else {
+        // digits only
+        v = v.replace(/[^0-9]/g, '');
+        // if starts with 9 -> assume Chile mobile and prepend 56
+        if (v.startsWith('9')) {
+          v = '56' + v;
+        }
+      }
+      tel.value = v;
+    });
+  })();
+</script>
 {% endblock %}

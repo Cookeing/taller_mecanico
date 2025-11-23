@@ -142,14 +142,16 @@
                     </td>
                     <td>{{ servicio.fecha_servicio|date:"d/m/Y" }}</td>
                     <td>
-                      {% if servicio.estado == 'completado' %}
-                        <span class="badge bg-success">Completado</span>
+                      {% if servicio.estado == 'pendiente' %}
+                        <span class="badge fw-semibold bg-warning text-dark">{{ servicio.get_estado_display }}</span>
                       {% elif servicio.estado == 'proceso' %}
-                        <span class="badge bg-warning">En Proceso</span>
-                      {% elif servicio.estado == 'pendiente' %}
-                        <span class="badge bg-info">Pendiente</span>
+                        <span class="badge fw-semibold bg-primary text-white">{{ servicio.get_estado_display }}</span>
+                      {% elif servicio.estado == 'completado' %}
+                        <span class="badge fw-semibold bg-success text-white">{{ servicio.get_estado_display }}</span>
+                      {% elif servicio.estado == 'cancelado' %}
+                        <span class="badge fw-semibold bg-danger text-white">{{ servicio.get_estado_display }}</span>
                       {% else %}
-                        <span class="badge bg-secondary">{{ servicio.get_estado_display }}</span>
+                        <span class="badge fw-semibold bg-secondary text-white">{{ servicio.get_estado_display }}</span>
                       {% endif %}
                     </td>
                     <td><strong>${{ servicio.total|floatformat:0|intcomma }}</strong></td>

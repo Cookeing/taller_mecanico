@@ -10,18 +10,20 @@ class CotizacionForm(forms.ModelForm):
         required=True,
         input_formats=['%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%Y/%m/%d', '%d.%m.%Y'],
         widget=forms.DateInput(attrs={
-            'class': 'form-control',
-            'type': 'date'
-        })
+            'class': 'form-control flatpickr-date',
+            'placeholder': 'dd/mm/yyyy',
+            'inputmode': 'numeric'
+        }, format='%d/%m/%Y')
     )
 
     fecha_validez = forms.DateField(
         required=False,
         input_formats=['%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%Y/%m/%d', '%d.%m.%Y'],
         widget=forms.DateInput(attrs={
-            'class': 'form-control',
-            'type': 'date'
-        })
+            'class': 'form-control flatpickr-date',
+            'placeholder': 'dd/mm/yyyy',
+            'inputmode': 'numeric'
+        }, format='%d/%m/%Y')
     )
     
     class Meta:

@@ -17,7 +17,11 @@ class ClienteForm(forms.ModelForm):
             }),
             "telefono": forms.TextInput(attrs={
                 "class": "form-control",
-                "placeholder": "9 1234 5678"
+                "placeholder": "9 1234 5678",
+                "inputmode": "tel",
+                "pattern": "\\+?[0-9 ]{8,15}",
+                "maxlength": "15",
+                "title": "Ingrese sólo números. Puede incluir +56 al inicio. Ej: +56 9 1234 5678"
             }),
             "direccion": forms.TextInput(attrs={
                 "class": "form-control",

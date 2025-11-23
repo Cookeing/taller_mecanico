@@ -45,7 +45,7 @@
       <tbody>
         {% for s in servicios %}
         <tr>
-          <td class="text-center">{{ s.fecha_servicio|date:"d-m-Y" }}</td>
+          <td class="text-center">{{ s.fecha_servicio|date:"d/m/Y" }}</td>
           <td class="text-center">
           <a href="{% url 'servicios:documentos_servicio' s.id %}" class="btn btn-sm btn-info text-truncate d-inline-block" title="{{ s.descripcion_trabajo }}" style="max-width: 160px;">
           <i class="bi bi-file-earmark-text me-1"></i>

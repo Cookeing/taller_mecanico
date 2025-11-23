@@ -26,7 +26,9 @@
               <h5 class="mb-0 text-white">#{{ s.id }} - {{ s.vehiculo.patente }}</h5>
               <small class="text-white">{{ s.vehiculo.marca }} {{ s.vehiculo.modelo }}</small>
             </div>
-            <span class="badge bg-info">{{ s.get_estado_display }}</span>
+            <span class="badge fw-semibold {% if s.estado == 'pendiente' %}bg-warning text-dark{% elif s.estado == 'proceso' %}bg-primary text-white{% elif s.estado == 'completado' %}bg-success text-white{% elif s.estado == 'cancelado' %}bg-danger text-white{% else %}bg-secondary text-white{% endif %}">
+              {{ s.get_estado_display }}
+            </span>
           </div>
         </div>
 

@@ -66,6 +66,8 @@ body {
 
 <div class="cotizacion-wrapper">
   <link rel="stylesheet" href="{% static 'cotizaciones/css/cotizacion.css' %}">
+  <!-- Flatpickr CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   
   <!-- ALERTA DE ERRORES -->
   <div class="alert-errors" id="error-alert">
@@ -126,17 +128,17 @@ body {
             <!-- FECHA EMISIÓN - REQUERIDO -->
             <div class="fecha-group">
               <label>FECHA <span style="color: #E57373;">*</span></label>
-              <input type="date" name="fecha_emision" id="fecha_emision" 
-                     value="{% if cotizacion %}{{ cotizacion.fecha_emision|date:'Y-m-d' }}{% else %}{{ today|date:'Y-m-d' }}{% endif %}" 
-                     required>
+              <input type="text" name="fecha_emision" id="fecha_emision" class="form-control flatpickr-date" placeholder="dd/mm/yyyy"
+                value="{% if cotizacion %}{{ cotizacion.fecha_emision|date:'d/m/Y' }}{% else %}{{ today|date:'d/m/Y' }}{% endif %}"
+                required>
               <span class="error-message" id="error-fecha_emision"></span>
             </div>
             
             <!-- FECHA VALIDEZ -->
             <div class="fecha-group">
               <label>VALIDEZ</label>
-              <input type="date" name="fecha_validez" id="fecha_validez" 
-                     value="{% if cotizacion %}{{ cotizacion.fecha_validez|date:'Y-m-d' }}{% else %}{{ validez|date:'Y-m-d' }}{% endif %}">
+              <input type="text" name="fecha_validez" id="fecha_validez" class="form-control flatpickr-date" placeholder="dd/mm/yyyy"
+                value="{% if cotizacion %}{{ cotizacion.fecha_validez|date:'d/m/Y' }}{% else %}{{ validez|date:'d/m/Y' }}{% endif %}">
             </div>
           </div>
         </div>
@@ -242,12 +244,32 @@ body {
       <input type="hidden" name="items_data" id="items_data">
       
       <div class="action-buttons">
-        <button type="submit" class="btn-guardar" id="btn-guardar">{% if is_edit %}✅ Actualizar{% else %}💾 Guardar{% endif %} Cotización</button>
-        {% if servicio %}<a href="{% url 'servicios:documentos_servicio' servicio.id %}" class="btn-cancelar">❌ Volver al Servicio</a>{% else %}<a href="{% url 'cotizaciones:listar_cotizaciones' %}" class="btn-cancelar">❌ Cancelar</a>{% endif %}
+        <button type="submit" class="btn-guardar" id="btn-guardar">{% if is_edit %}Actualizar{% else %}Guardar{% endif %} Cotización</button>
+        {% if servicio %}<a href="{% url 'servicios:documentos_servicio' servicio.id %}" class="btn-cancelar">Volver al Servicio</a>{% else %}<a href="{% url 'cotizaciones:listar_cotizaciones' %}" class="btn-cancelar">Cancelar</a>{% endif %}
       </div>
     </form>
   </div>
 </div>
+
+{% block extra_js %}
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (typeof flatpickr === 'undefined') return;
+      flatpickr.localize(flatpickr.l10ns.es);
+      document.querySelectorAll('.flatpickr-date').forEach(function(el) {
+        var current = el.value && el.value.trim() !== '' ? el.value.trim() : null;
+        flatpickr(el, {
+          dateFormat: 'd/m/Y',
+          allowInput: true,
+          defaultDate: current || new Date(),
+          locale: 'es',
+        });
+      });
+    });
+  </script>
+{% endblock %}
 
 {% if is_edit and items %}
 <script type="application/json" id="items-data-json">

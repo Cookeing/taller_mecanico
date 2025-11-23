@@ -5,6 +5,7 @@
   Historial de cotizaciones
 {% endblock title %}
 
+{% load phone_filters %}
 {% block content %}
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Historial de Cotizaciones</h2>
@@ -131,7 +132,7 @@
           <td>
             <form method="post" action="{% url 'cotizaciones:cambiar_estado' cot.id %}" class="d-inline">
               {% csrf_token %}
-              <select name="nuevo_estado" class="form-select form-select-sm bg-dark text-white" style="min-width: 140px;" onchange="this.form.submit()">
+              <select name="nuevo_estado" class="form-select form-select-sm" style="min-width: 140px;" onchange="this.form.submit()">
                 <option value="PENDIENTE" {% if cot.estado_cotizacion == 'PENDIENTE' %}selected{% endif %}>Pendiente</option>
                 <option value="APROBADA" {% if cot.estado_cotizacion == 'APROBADA' %}selected{% endif %}>Aprobada</option>
                 <option value="RECHAZADA" {% if cot.estado_cotizacion == 'RECHAZADA' %}selected{% endif %}>Rechazada</option>
@@ -156,7 +157,7 @@
               </button>
             {% endif %}
             {% if cot.cliente and cot.cliente.telefono %}
-              <a href="https://wa.me/56{{ cot.cliente.telefono|cut:" "|cut:"("|cut:")"|cut:"-"|cut:"+" }}?text={{ cot.get_mensaje_whatsapp|urlencode }}"
+              <a href="https://wa.me/{{ cot.cliente.telefono|phone_whatsapp }}?text={{ cot.get_mensaje_whatsapp|urlencode }}"
                 class="btn btn-sm btn-outline-success mb-1"
                 target="_blank"
                 title="Enviar por WhatsApp">
@@ -245,14 +246,7 @@
 {% block extra_js %}
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    const duplicarButtons = document.querySelectorAll('a[href*="duplicar"]');
-    duplicarButtons.forEach(button => {
-      button.addEventListener('click', function(e) {
-        if (!confirm('¿Desea crear una copia de esta cotización? Se generará un nuevo número.')) {
-          e.preventDefault();
-        }
-      });
-    });
+    // No hay botón de duplicar en esta vista; se omitió el diálogo.
 
     // Email modal handling (robust: si bootstrap no está, hace fallback con prompt)
     const emailInput = document.getElementById('emailDestinoInput');
