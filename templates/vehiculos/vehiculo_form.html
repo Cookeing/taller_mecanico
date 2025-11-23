@@ -2,7 +2,7 @@
 {% block content %}
 <div class="container py-4">
   <div class="card shadow-sm border-0">
-    <div class="card-header bg-dark text-white">
+    <div class="card-header bg-primary text-white">
       <h4 class="mb-0">{{ accion }} vehículo</h4>
     </div>
     <div class="card-body">
@@ -22,7 +22,7 @@
           {% if field.name == 'cliente' %}
           <div class="d-flex gap-2">
             {{ field }}
-            <a href="{% url 'clientes:create' %}?next={{ request.path }}" class="btn btn-outline-success" onclick="abrirPopupCliente(event)" title="Agregar nuevo cliente">+</a>
+            <a href="{% url 'clientes:create' %}?popup=1&next={{ request.path }}" class="btn btn-outline-success" onclick="abrirPopupCliente(event)" title="Agregar nuevo cliente">+</a>
           </div>
           <small class="text-muted">Haz clic en <strong>+</strong> para agregar un cliente nuevo</small>
           {% else %}
@@ -40,9 +40,15 @@
         {% endfor %}
 
         <div class="d-flex justify-content-between mt-4">
+          {% if popup %}
+          <button type="button" class="btn btn-secondary" onclick="(function(){ if(window.opener){ try{window.opener.focus();}catch(e){} } window.close(); })()">
+            <i class="bi bi-x-lg"></i> Cerrar
+          </button>
+          {% else %}
           <a href="{% url 'vehiculos:list' %}" class="btn btn-secondary">
             <i class="bi bi-arrow-left"></i> Volver
           </a>
+          {% endif %}
           <button type="submit" class="btn btn-primary px-4">
             <i class="bi bi-save"></i> Guardar
           </button>

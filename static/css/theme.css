@@ -1478,3 +1478,39 @@ html[data-theme="dark"] .form-text {
   h4 { font-size: var(--font-size-md); }
   h5, h6 { font-size: var(--font-size-sm); }
 }
+
+/* Mejoras de legibilidad en Modo Claro: asegurar contraste en labels/inputs/selects */
+html[data-theme="light"] .form-control,
+html[data-theme="light"] input,
+html[data-theme="light"] select,
+html[data-theme="light"] textarea {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+html[data-theme="light"] label,
+html[data-theme="light"] .form-label,
+html[data-theme="light"] .text-muted {
+  color: var(--color-text);
+}
+
+/* Placeholder más oscuro en modo claro para mejor legibilidad */
+html[data-theme="light"] input::placeholder,
+html[data-theme="light"] textarea::placeholder {
+  color: rgba(0,0,0,0.45);
+  opacity: 1;
+}
+
+/* Forzar color blanco en encabezados de tarjetas con fondo oscuro/primario */
+.card-header.bg-dark,
+.card-header.bg-primary,
+.card-header.bg-secondary {
+  color: #ffffff !important;
+}
+
+.card-header.bg-dark h4,
+.card-header.bg-primary h4,
+.card-header.bg-secondary h4 {
+  color: #ffffff !important;
+}

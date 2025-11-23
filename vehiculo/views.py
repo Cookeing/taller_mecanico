@@ -37,9 +37,13 @@ def vehiculo_create(request):
     else:
         form = VehiculoForm()
 
+    # Detectar si se abrió como popup (parámetro ?popup=1) y pasar la bandera al template
+    is_popup = request.GET.get("popup") == "1"
+
     return render(request, "vehiculos/vehiculo_form.html", {
         "form": form,
         "accion": "Registrar",
+        "popup": is_popup,
     })
 
 

@@ -22,12 +22,18 @@ def cliente_create(request):
     if request.method == 'POST':
         form = ClienteForm(request.POST)
         if form.is_valid():
-            form.save()
+            cliente = form.save()
+            # Si se creó desde un popup devolver plantilla ligera que cierre la ventana
+            if request.GET.get('popup') == '1':
+                return render(request, 'vehiculos/popup_cliente.html', {'cliente': cliente})
+
             messages.success(request, '✅ Cliente creado exitosamente.')
             return redirect('clientes:list')
     else:
         form = ClienteForm()
-    return render(request, 'clientes/cliente_form.html', {'form': form, 'accion': 'Crear'})
+    # pasar flag popup al template si se abrió como popup
+    is_popup = request.GET.get('popup') == '1'
+    return render(request, 'clientes/cliente_form.html', {'form': form, 'accion': 'Crear', 'popup': is_popup})
 
 
 def cliente_update(request, pk: int):
