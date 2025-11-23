@@ -17,7 +17,7 @@ class ClienteForm(forms.ModelForm):
             }),
             "telefono": forms.TextInput(attrs={
                 "class": "form-control",
-                "placeholder": "91234 5678"
+                "placeholder": "9 1234 5678"
             }),
             "direccion": forms.TextInput(attrs={
                 "class": "form-control",
