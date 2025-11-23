@@ -17,6 +17,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+#urls para login y logout
+LOGIN_REDIRECT_URL = "/home/"  # o tu vista principal
+LOGOUT_REDIRECT_URL = "/login/"
+
 
 # Application definition
 
@@ -111,6 +115,7 @@ LANGUAGE_CODE = 'es-cl'
 TIME_ZONE = 'America/Santiago'
 
 USE_I18N = True
+USE_L10N = False # establecido a False para usar DATE_FORMAT personalizado entonces se podra usar el formato de fecha chileno
 
 USE_TZ = True
 

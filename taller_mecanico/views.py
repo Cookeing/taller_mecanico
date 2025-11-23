@@ -1,7 +1,10 @@
 from django.shortcuts import render
 from django.db.models import Sum
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required
 
+
+@login_required
 def home(request):
     """
     Vista principal del dashboard con estadísticas reales
@@ -39,10 +42,25 @@ def home(request):
         fecha_servicio__gte=inicio_mes
     ).count()
     
-    # Cotizaciones aprobadas
+    # Ingresos del mes actual
+    ingresos_mes = Servicio.objects.filter(
+        fecha_servicio__gte=inicio_mes,
+        estado='completado'
+    ).aggregate(total=Sum('total'))['total'] or 0
+    
+    # Cotizaciones aprobadas con su valor total
     cotizaciones_aprobadas = Cotizacion.objects.filter(
         estado_cotizacion='APROBADA'
     ).count()
+    
+    valor_cotizaciones_aprobadas = Cotizacion.objects.filter(
+        estado_cotizacion='APROBADA'
+    ).aggregate(total=Sum('monto_total'))['total'] or 0
+    
+    # Cotizaciones pendientes con su valor potencial
+    valor_cotizaciones_pendientes = Cotizacion.objects.filter(
+        estado_cotizacion='PENDIENTE'
+    ).aggregate(total=Sum('monto_total'))['total'] or 0
     
     context = {
         'total_clientes': total_clientes,
@@ -52,7 +70,10 @@ def home(request):
         'servicios_recientes': servicios_recientes,
         'ingresos_totales': ingresos_totales,
         'servicios_mes': servicios_mes,
+        'ingresos_mes': ingresos_mes,
         'cotizaciones_aprobadas': cotizaciones_aprobadas,
+        'valor_cotizaciones_aprobadas': valor_cotizaciones_aprobadas,
+        'valor_cotizaciones_pendientes': valor_cotizaciones_pendientes,
     }
     
     return render(request, 'home.html', context)

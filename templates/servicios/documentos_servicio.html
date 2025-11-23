@@ -76,9 +76,6 @@
         <div class="card-header" style="background: linear-gradient(135deg, var(--color-primary) 0%, rgba(43, 76, 126, 0.7) 100%);">
           <div class="d-flex justify-content-between align-items-center">
             <h5 class="mb-0 text-white"><i class="bi bi-file-text"></i> Cotizaciones ({{ cotizaciones.count }})</h5>
-            <a href="{% url 'cotizaciones:registrar_cotizacion' %}?servicio_id={{ servicio.id }}" class="btn btn-sm btn-light">
-              <i class="bi bi-plus-circle me-1"></i> Nueva
-            </a>
           </div>
         </div>
         <div class="card-body">

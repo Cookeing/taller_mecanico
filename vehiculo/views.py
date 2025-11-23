@@ -26,15 +26,22 @@ def vehiculo_create(request):
     if request.method == "POST":
         form = VehiculoForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, '✅ Vehículo registrado exitosamente.')
+            vehiculo = form.save()
+
+            # Si viene en modo popup va a devolver template especial osea el que se creo xd
+            if request.GET.get("popup") == "1":
+                return render(request, "servicios/popup_vehiculo.html", {"vehiculo": vehiculo})
+
+            messages.success(request, "Vehículo registrado exitosamente.")
             return redirect("vehiculos:list")
     else:
         form = VehiculoForm()
+
     return render(request, "vehiculos/vehiculo_form.html", {
         "form": form,
         "accion": "Registrar",
     })
+
 
 
 def vehiculo_update(request, pk):

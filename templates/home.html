@@ -22,9 +22,6 @@
           <a href="{% url 'servicios:create' %}" class="btn btn-primary btn-lg">
             <i class="bi bi-plus-circle me-1"></i> Nuevo Servicio
           </a>
-          <a href="{% url 'cotizaciones:registrar_cotizacion' %}" class="btn btn-outline-primary btn-lg">
-            <i class="bi bi-file-earmark-plus me-1"></i> Nueva Cotización
-          </a>
         </div>
       </div>
     </div>
@@ -35,66 +32,74 @@
     <div class="row g-4">
       <!-- Total Clientes -->
       <div class="col-md-6 col-xl-3">
-        <div class="stat-card stat-card-primary">
-          <div class="stat-icon">
-            <i class="bi bi-people-fill"></i>
+        <a href="{% url 'clientes:list' %}" class="text-decoration-none">
+          <div class="stat-card stat-card-primary clickable-card">
+            <div class="stat-icon">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-number">{{ total_clientes|default:0 }}</h3>
+              <p class="stat-label">Clientes</p>
+            </div>
+            <div class="stat-arrow">
+              <i class="bi bi-arrow-right-circle"></i>
+            </div>
           </div>
-          <div class="stat-content">
-            <h3 class="stat-number">{{ total_clientes|default:0 }}</h3>
-            <p class="stat-label">Clientes</p>
-            <a href="{% url 'clientes:list' %}" class="stat-link">
-              Ver todos <i class="bi bi-arrow-right"></i>
-            </a>
-          </div>
-        </div>
+        </a>
       </div>
 
       <!-- Total Vehículos -->
       <div class="col-md-6 col-xl-3">
-        <div class="stat-card stat-card-info">
-          <div class="stat-icon">
-            <i class="bi bi-car-front-fill"></i>
+        <a href="{% url 'vehiculos:list' %}" class="text-decoration-none">
+          <div class="stat-card stat-card-info clickable-card">
+            <div class="stat-icon">
+              <i class="bi bi-car-front-fill"></i>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-number">{{ total_vehiculos|default:0 }}</h3>
+              <p class="stat-label">Vehículos</p>
+            </div>
+            <div class="stat-arrow">
+              <i class="bi bi-arrow-right-circle"></i>
+            </div>
           </div>
-          <div class="stat-content">
-            <h3 class="stat-number">{{ total_vehiculos|default:0 }}</h3>
-            <p class="stat-label">Vehículos</p>
-            <a href="{% url 'vehiculos:list' %}" class="stat-link">
-              Ver todos <i class="bi bi-arrow-right"></i>
-            </a>
-          </div>
-        </div>
+        </a>
       </div>
 
       <!-- Servicios Activos -->
       <div class="col-md-6 col-xl-3">
-        <div class="stat-card stat-card-warning">
-          <div class="stat-icon">
-            <i class="bi bi-wrench-adjustable-circle-fill"></i>
+        <a href="{% url 'servicios:list' %}" class="text-decoration-none">
+          <div class="stat-card stat-card-warning clickable-card">
+            <div class="stat-icon">
+              <i class="bi bi-wrench-adjustable-circle-fill"></i>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-number">{{ servicios_activos|default:0 }}</h3>
+              <p class="stat-label">Servicios Activos</p>
+            </div>
+            <div class="stat-arrow">
+              <i class="bi bi-arrow-right-circle"></i>
+            </div>
           </div>
-          <div class="stat-content">
-            <h3 class="stat-number">{{ servicios_activos|default:0 }}</h3>
-            <p class="stat-label">Servicios Activos</p>
-            <a href="{% url 'servicios:list' %}" class="stat-link">
-              Ver todos <i class="bi bi-arrow-right"></i>
-            </a>
-          </div>
-        </div>
+        </a>
       </div>
 
       <!-- Cotizaciones Pendientes -->
       <div class="col-md-6 col-xl-3">
-        <div class="stat-card stat-card-success">
-          <div class="stat-icon">
-            <i class="bi bi-file-earmark-text-fill"></i>
+        <a href="{% url 'cotizaciones:listar_cotizaciones' %}" class="text-decoration-none">
+          <div class="stat-card stat-card-success clickable-card">
+            <div class="stat-icon">
+              <i class="bi bi-file-earmark-text-fill"></i>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-number">{{ cotizaciones_pendientes|default:0 }}</h3>
+              <p class="stat-label">Cotizaciones</p>
+            </div>
+            <div class="stat-arrow">
+              <i class="bi bi-arrow-right-circle"></i>
+            </div>
           </div>
-          <div class="stat-content">
-            <h3 class="stat-number">{{ cotizaciones_pendientes|default:0 }}</h3>
-            <p class="stat-label">Cotizaciones</p>
-            <a href="{% url 'cotizaciones:listar_cotizaciones' %}" class="stat-link">
-              Ver todas <i class="bi bi-arrow-right"></i>
-            </a>
-          </div>
-        </div>
+        </a>
       </div>
     </div>
   </section>
@@ -128,7 +133,7 @@
                 </thead>
                 <tbody>
                   {% for servicio in servicios_recientes %}
-                  <tr>
+                  <tr style="cursor: pointer;" onclick="window.location='{% url 'servicios:documentos_servicio' servicio.id %}'" class="hover-highlight">
                     <td><strong>#{{ servicio.id }}</strong></td>
                     <td>{{ servicio.vehiculo.cliente.nombre }}</td>
                     <td>
@@ -182,9 +187,6 @@
             <a href="{% url 'servicios:create' %}" class="btn btn-outline-warning btn-sm text-start">
               <i class="bi bi-wrench me-1"></i> Nuevo Servicio
             </a>
-            <a href="{% url 'cotizaciones:registrar_cotizacion' %}" class="btn btn-outline-success btn-sm text-start">
-              <i class="bi bi-file-earmark-plus me-1"></i> Nueva Cotización
-            </a>
           </div>
         </div>
       </div>
@@ -199,32 +201,37 @@
         <div class="card-body">
           <div class="mb-3">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="text-muted small">Ingresos Totales</span>
+              <span class="text-muted small">Ingresos Completados</span>
               <strong class="text-success">${{ ingresos_totales|default:0|floatformat:0|intcomma }}</strong>
             </div>
-            <div class="progress" style="height: 8px;">
-              <div class="progress-bar bg-success" style="width: 100%"></div>
-            </div>
+            <small class="text-muted">Total de servicios completados</small>
           </div>
+          <hr>
 
           <div class="mb-3">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="text-muted small">Servicios del Mes</span>
-              <strong>{{ servicios_mes|default:0 }}</strong>
+              <span class="text-muted small">Ingresos del Mes</span>
+              <strong class="text-primary">${{ ingresos_mes|default:0|floatformat:0|intcomma }}</strong>
             </div>
-            <div class="progress" style="height: 8px;">
-              <div class="progress-bar bg-primary" style="width: 75%"></div>
-            </div>
+            <small class="text-muted">{{ servicios_mes|default:0 }} servicio{{ servicios_mes|pluralize }} este mes</small>
           </div>
+          <hr>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-muted small">Cotizaciones Aprobadas</span>
+              <strong class="text-info">{{ cotizaciones_aprobadas|default:0 }}</strong>
+            </div>
+            <small class="text-muted">Valor: ${{ valor_cotizaciones_aprobadas|default:0|floatformat:0|intcomma }}</small>
+          </div>
+          <hr>
 
           <div>
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="text-muted small">Cotizaciones Aprobadas</span>
-              <strong>{{ cotizaciones_aprobadas|default:0 }}</strong>
+              <span class="text-muted small">Cotizaciones Pendientes</span>
+              <strong class="text-warning">{{ cotizaciones_pendientes|default:0 }}</strong>
             </div>
-            <div class="progress" style="height: 8px;">
-              <div class="progress-bar bg-info" style="width: 60%"></div>
-            </div>
+            <small class="text-muted">Valor potencial: ${{ valor_cotizaciones_pendientes|default:0|floatformat:0|intcomma }}</small>
           </div>
         </div>
       </div>
@@ -302,22 +309,41 @@
   font-size: 0.875rem;
 }
 
-.stat-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.875rem;
-  color: var(--color-primary);
-  text-decoration: none;
-  margin-top: 0.5rem;
+.stat-arrow {
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  opacity: 0.6;
+  transition: all 0.3s ease;
 }
 
-.stat-link:hover {
-  text-decoration: underline;
+.clickable-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
+
+.clickable-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+}
+
+.clickable-card:hover .stat-arrow {
+  opacity: 1;
+  transform: translateX(5px);
+  color: var(--text-primary);
+}
+
+.stat-card-primary:hover .stat-arrow { color: var(--color-primary); }
+.stat-card-info:hover .stat-arrow { color: var(--color-info); }
+.stat-card-warning:hover .stat-arrow { color: var(--color-warning); }
+.stat-card-success:hover .stat-arrow { color: var(--color-success); }
 
 .card {
   border: 1px solid var(--border-subtle);
+}
+
+.hover-highlight:hover {
+  background-color: var(--bg-elevated) !important;
+  transition: background-color 0.2s ease;
 }
 </style>
 {% endblock %}
