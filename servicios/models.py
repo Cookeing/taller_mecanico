@@ -23,19 +23,26 @@ class Servicio(models.Model):
 
     def actualizar_total(self):
         """
-        Actualiza el total solo si existen documentos con montos asociados.
-        Si no hay documentos, mantiene el valor ingresado manualmente.
+        Actualiza el total del servicio sumando:
+        - los montos de los documentos asociados
+        - los montos totales de las cotizaciones aprobadas
         """
-        documentos = self.documentos.all()
+        total_documentos = sum(d.monto or Decimal('0.00') for d in self.documentos.all())
 
-        # Si existen documentos, recalculamos el total
-        if documentos.exists():
-            total_docs = sum(d.monto or Decimal('0.00') for d in documentos)
-            # Solo actualiza si el total calculado difiere del actual
-            if total_docs != self.total:
-                self.total = total_docs
-                self.save(update_fields=['total'])
-        # Si no hay documentos, no toca el total (permite valor manual)
+        # Importación local para evitar ciclos
+        from cotizaciones.models import Cotizacion
+
+        total_cotizaciones = sum(
+            c.monto_total or Decimal('0.00')
+            for c in self.cotizaciones.filter(estado_cotizacion='APROBADA')
+        )
+
+        total_final = total_documentos + total_cotizaciones
+
+        if self.total != total_final:
+            self.total = total_final
+            self.save(update_fields=['total'])
+
 
     def __str__(self):
         return f"Servicio #{self.id} - {self.vehiculo.patente} ({self.get_estado_display()})"

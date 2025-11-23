@@ -15,4 +15,5 @@ urlpatterns = [
     #nueva ruta qu e genera el pdf eliminaren proximas v solo uso para testeo 
     path("pdf/<int:cotizacion_id>/", v.descargar_pdf_cotizacion, name="descargar_pdf"),
     path("email/<int:cotizacion_id>/", v.enviar_cotizacion_email, name="enviar_email"),
+    path("cambiar-estado/<int:cotizacion_id>/", v.cambiar_estado_cotizacion, name="cambiar_estado"),
 ]

@@ -15,6 +15,8 @@ from .models import Cotizacion, ItemCotizacion
 from .forms import CotizacionForm
 from clientes.models import Cliente
 from .utils import generar_pdf_cotizacion
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
 
 def RegistrarCotizacion(request):
@@ -78,6 +80,9 @@ def RegistrarCotizacion(request):
         
         cotizacion.subtotal = subtotal
         cotizacion.save()
+        if cotizacion.servicio:
+            cotizacion.servicio.actualizar_total()
+
         
         # Crear items
         for item_data in items_data:
@@ -223,6 +228,10 @@ def EditarCotizacion(request, pk):
         
         cotizacion.subtotal = subtotal
         cotizacion.save()
+        # AGREGADO: Actualizar total del servicio
+        if cotizacion.servicio:
+            cotizacion.servicio.actualizar_total()
+
         
         messages.success(request, 'Cotización actualizada exitosamente.')
         return redirect('cotizaciones:listar_cotizaciones')
@@ -297,11 +306,17 @@ def EliminarCotizacion(request, pk):
     
     if request.method == "POST":
         numero_cotizacion = cotizacion.numero_cotizacion
+        servicio = cotizacion.servicio  # <<< guardar servicio antes de borrar
         cotizacion.delete()
+
+        if servicio:
+            servicio.actualizar_total()  # <<< AÑADIR ESTA LÍNEA
+
         messages.success(request, f"Cotización {numero_cotizacion} eliminada exitosamente.")
         return redirect("cotizaciones:listar_cotizaciones")
     
     return redirect("cotizaciones:listar_cotizaciones")
+
 
 
 def VerPDF(request, pk):
@@ -373,4 +388,22 @@ def enviar_cotizacion_email(request, cotizacion_id):
             f"Error al enviar el email: {str(e)}"
         )
     
+    return redirect('cotizaciones:listar_cotizaciones')
+
+@csrf_exempt
+@require_POST
+def cambiar_estado_cotizacion(request, cotizacion_id):
+    cotizacion = get_object_or_404(Cotizacion, id=cotizacion_id)
+    nuevo_estado = request.POST.get("nuevo_estado")
+
+    if nuevo_estado in dict(Cotizacion.ESTADO_COTIZACION_CHOICES):
+        cotizacion.estado_cotizacion = nuevo_estado
+        cotizacion.save()
+        if cotizacion.servicio:
+            cotizacion.servicio.actualizar_total()
+
+        messages.success(request, f"Estado actualizado a {cotizacion.get_estado_cotizacion_display()}")
+    else:
+        messages.error(request, "Estado inválido")
+
     return redirect('cotizaciones:listar_cotizaciones')

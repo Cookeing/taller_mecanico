@@ -140,8 +140,13 @@ def documentos_servicio(request, servicio_id):
             doc = form.save(commit=False)
             doc.servicio = servicio
             doc.save()
+
+            # ✅ ACTUALIZA TOTAL DEL SERVICIO
+            servicio.actualizar_total()
+
             messages.success(request, "Documento subido con éxito.")
             return redirect("servicios:documentos_servicio", servicio_id=servicio.id)
+
     else:
         form = DocumentoForm()
 
@@ -161,21 +166,28 @@ def documento_upload(request, servicio_id):
             doc = form.save(commit=False)
             doc.servicio = servicio
             doc.save()
+
+            # 🚨 Agrega esto:
+            servicio.actualizar_total()
+
             messages.success(request, "Documento subido con éxito.")
     return redirect("servicios:documentos_servicio", servicio_id=servicio.id)
 
 
+
 def documento_delete(request, pk):
     documento = get_object_or_404(Documento, pk=pk)
-    servicio_id = documento.servicio.id
+    servicio = documento.servicio  # <<< usa esto en lugar de solo servicio_id
     if request.method == "POST":
         documento.delete()
+        servicio.actualizar_total()  # <<< AÑADIR ESTA LÍNEA
         messages.success(request, "Documento eliminado correctamente.")
-        return redirect("servicios:documentos_servicio", servicio_id=servicio_id)
+        return redirect("servicios:documentos_servicio", servicio_id=servicio.id)
 
     return render(request, "servicios/documento_confirm_delete.html", {
         "documento": documento,
     })
+
 
 
 # ========== FOTOS DE SERVICIOS ==========
