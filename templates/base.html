@@ -30,7 +30,7 @@
   </head>
   <body>
     <!-- SIDEBAR -->
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
       <div class="sidebar-logo">
         <i class="bi bi-tools"></i>
         <span>Taller Admin</span>
@@ -77,10 +77,23 @@
           <span>Cotizaciones</span>
         </a>
       </nav>
+
+      <!-- Logout button at bottom of sidebar -->
+      <div style="margin-top: auto; padding: var(--space-16);">
+        <a href="{% url 'logout' %}" class="sidebar-item" style="color: var(--color-error);">
+          <i class="bi bi-box-arrow-right"></i>
+          <span>Cerrar Sesión</span>
+        </a>
+      </div>
     </div>
 
     <!-- MAIN CONTENT -->
-    <div class="main-content">
+    <div class="main-content" id="main-content">
+      <!-- Toggle sidebar button -->
+      <button class="sidebar-toggle-btn" id="sidebar-toggle-btn" aria-label="Mostrar/Ocultar menú">
+        <i class="bi bi-list"></i>
+      </button>
+      
       <main class="container-fluid py-4">
         {% block content %}{% endblock %}
       </main>
@@ -126,6 +139,30 @@
             icon.className = "bi bi-sun-fill";
           }
         }
+      })();
+    </script>
+
+    <script>
+      // TOGGLE SIDEBAR
+      (function () {
+        const sidebar = document.getElementById("sidebar");
+        const mainContent = document.getElementById("main-content");
+        const toggleBtn = document.getElementById("sidebar-toggle-btn");
+        
+        // Cargar estado del sidebar
+        const sidebarCollapsed = localStorage.getItem("sidebarCollapsed") === "true";
+        if (sidebarCollapsed) {
+          sidebar.classList.add("collapsed");
+          mainContent.classList.add("expanded");
+        }
+        
+        toggleBtn.addEventListener("click", () => {
+          sidebar.classList.toggle("collapsed");
+          mainContent.classList.toggle("expanded");
+          
+          const isCollapsed = sidebar.classList.contains("collapsed");
+          localStorage.setItem("sidebarCollapsed", isCollapsed);
+        });
       })();
     </script>
       {% block extra_js %}{% endblock %}
