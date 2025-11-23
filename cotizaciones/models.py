@@ -42,7 +42,8 @@ class Cotizacion(models.Model):
     empresa_contacto_persona = models.CharField(max_length=100, blank=True)
     logo = models.ImageField(upload_to='cotizaciones/logos/', blank=True, null=True)
 
-    numero_cotizacion = models.CharField(max_length=20, unique=True, blank=True)
+    # Permitimos reutilizar números de cotización (no unique)
+    numero_cotizacion = models.CharField(max_length=20, blank=True)
     fecha_emision = models.DateField(default=timezone.now)
     fecha_validez = models.DateField(blank=True, null=True)
 

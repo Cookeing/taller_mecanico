@@ -76,7 +76,32 @@
               <a href="{% url 'servicios:fotos_servicio' s.id %}" class="btn btn-outline-info" title="Fotos">
                 <i class="bi bi-camera"></i>
               </a>
+              <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteServiceModal{{ s.id }}" title="Eliminar">
+                <i class="bi bi-trash"></i>
+              </button>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal eliminar servicio -->
+    <div class="modal fade" id="deleteServiceModal{{ s.id }}" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Eliminar Servicio</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            ¿Seguro que deseas eliminar el servicio <strong>#{{ s.id }}</strong>?<br>
+            <small class="text-muted">Se eliminarán cotizaciones y documentos relacionados.</small>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <form method="POST" action="{% url 'servicios:delete' s.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger">Eliminar Servicio</button>
+            </form>
           </div>
         </div>
       </div>

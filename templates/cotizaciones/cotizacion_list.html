@@ -140,18 +140,16 @@
           </td>
           <td class="acciones-celda" style="white-space: nowrap;">
             <a href="{% url 'cotizaciones:descargar_pdf' cot.id %}" 
-               class="btn btn-sm btn-outline-primary mb-2" 
+               class="btn btn-sm btn-outline-danger mb-2" 
                target="_blank"
                title="Ver PDF">
               <i class="bi bi-file-pdf me-1"></i> PDF
             </a>
             {% if cot.cliente.email %}
-              <a href="{% url 'cotizaciones:enviar_email' cot.id %}" 
-                 class="btn btn-sm btn-outline-success mb-1"
-                 onclick="return confirm('¿Enviar cotización a {{ cot.cliente.email }}?');"
-                 title="Enviar por email a {{ cot.cliente.email }}">
+              <button type="button" class="btn btn-sm btn-outline-warning mb-1 btn-open-email-modal" 
+                      data-cot-id="{{ cot.id }}" data-default-email="{{ cot.cliente.email }}" title="Enviar por email a {{ cot.cliente.email }}">
                 <i class="bi bi-envelope me-1"></i> Email
-              </a>
+              </button>
             {% else %}
               <button class="btn btn-sm btn-outline-secondary mb-1" disabled title="El cliente no tiene email registrado">
                 <i class="bi bi-envelope-slash"></i> Sin email
@@ -169,8 +167,35 @@
                 <i class="bi bi-whatsapp"></i> Sin número
               </button>
             {% endif %}
+            <form method="POST" action="{% url 'cotizaciones:eliminar_cotizacion' cot.id %}" style="display:inline;">
+              {% csrf_token %}
+              <button type="button" class="btn btn-sm btn-outline-danger mb-1" data-bs-toggle="modal" data-bs-target="#deleteCotModal{{ cot.id }}" title="Eliminar">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
           </td>
         </tr>
+        <!-- Modal eliminar cotización -->
+        <div class="modal fade" id="deleteCotModal{{ cot.id }}" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Confirmar eliminación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                ¿Seguro que quieres eliminar la cotización <strong>#{{ cot.numero_cotizacion }}</strong>?<br><small class="text-muted">Esta acción no se puede deshacer.</small>
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" action="{% url 'cotizaciones:eliminar_cotizacion' cot.id %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
         {% empty %}
         <tr>
           <td colspan="6" class="text-center py-4">
@@ -228,6 +253,72 @@
         }
       });
     });
+
+    // Email modal handling (robust: si bootstrap no está, hace fallback con prompt)
+    const emailInput = document.getElementById('emailDestinoInput');
+    const emailForm = document.getElementById('emailEnviarForm');
+
+    document.querySelectorAll('.btn-open-email-modal').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const cotId = this.dataset.cotId;
+        const defaultEmail = this.dataset.defaultEmail || '{{ default_from_email }}' || '';
+        // ajustar action: usar la ruta generada con id 0 y reemplazar el 0 por el id real
+        if (emailForm) {
+          const baseAction = "{% url 'cotizaciones:enviar_email' 0 %}";
+          emailForm.action = baseAction.replace('/0/', `/${cotId}/`);
+        }
+
+        // Si bootstrap está disponible, usar modal; si no, pedir por prompt y enviar
+        if (typeof bootstrap !== 'undefined' && document.getElementById('emailCotModal')) {
+          const emailModalEl = document.getElementById('emailCotModal');
+          let modalInstance = bootstrap.Modal.getInstance(emailModalEl);
+          if (!modalInstance) modalInstance = new bootstrap.Modal(emailModalEl);
+          if (emailInput) emailInput.value = defaultEmail;
+          modalInstance.show();
+        } else {
+          // Fallback simple
+          const entrada = window.prompt('Email destinatario:', defaultEmail || '');
+          if (entrada && emailForm) {
+            // crear campo hidden si no existe
+            let hidden = emailForm.querySelector('input[name="to_email"]');
+            if (!hidden) {
+              hidden = document.createElement('input');
+              hidden.type = 'hidden';
+              hidden.name = 'to_email';
+              emailForm.appendChild(hidden);
+            }
+            hidden.value = entrada;
+            emailForm.submit();
+          }
+        }
+      });
+    });
   });
 </script>
+
+<!-- Modal para enviar email editable -->
+<div class="modal fade" id="emailCotModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="bi bi-envelope"></i> Enviar cotización por email</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="emailEnviarForm" method="post" action="">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="mb-2">
+            <label for="emailDestinoInput" class="form-label">Email destinatario</label>
+            <input type="email" id="emailDestinoInput" name="to_email" class="form-control" required placeholder="destino@ejemplo.com">
+            <div class="form-text">Por defecto aparece el email del cliente; puede modificarlo.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Enviar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 {% endblock extra_js %}

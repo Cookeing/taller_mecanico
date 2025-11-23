@@ -174,17 +174,16 @@ function deleteRow(button) {
     const tbody = row.closest('tbody');
     
     if (tbody.querySelectorAll('tr').length === 1) {
-        alert('Debe mantener al menos una fila por categoría');
+        showInfoModal('Debe mantener al menos una fila por categoría');
         return;
     }
-    
-    row.remove();
-    
-    // Renumerar ítems
-    const categoryWrapper = tbody.closest('.category-wrapper');
-    renumberCategoryRows(categoryWrapper);
-    calculateCategorySubtotal(categoryWrapper);
-    calculateGrandTotal();
+    showConfirmModal('¿Está seguro que desea eliminar esta fila?', function() {
+        row.remove();
+        const categoryWrapper = tbody.closest('.category-wrapper');
+        renumberCategoryRows(categoryWrapper);
+        calculateCategorySubtotal(categoryWrapper);
+        calculateGrandTotal();
+    });
 }
 
 // FUNCIÓN PARA ELIMINAR CATEGORÍA
@@ -192,18 +191,82 @@ function deleteCategory(button) {
     const categories = document.querySelectorAll('.category-wrapper');
     
     if (categories.length === 1) {
-        alert('Debe mantener al menos una categoría');
+        showInfoModal('Debe mantener al menos una categoría');
         return;
     }
-    
-    if (!confirm('¿Está seguro que desea eliminar esta categoría?')) {
+    showConfirmModal('¿Está seguro que desea eliminar esta categoría?', function() {
+        const categoryWrapper = button.closest('.category-wrapper');
+        categoryWrapper.remove();
+        calculateGrandTotal();
+    });
+}
+
+// Modal helpers (usa el modal presente en la plantilla)
+function showConfirmModal(message, onConfirm) {
+    const modal = document.getElementById('confirm-modal');
+    if (!modal) {
+        // Si el modal no existe, registrar y ejecutar acción para mantener compatibilidad
+        console.warn('Confirm modal no encontrado en DOM — ejecutando acción por defecto');
+        onConfirm();
         return;
     }
-    
-    const categoryWrapper = button.closest('.category-wrapper');
-    categoryWrapper.remove();
-    
-    calculateGrandTotal();
+    const msgEl = document.getElementById('confirm-modal-message');
+    const btnConfirm = document.getElementById('confirm-modal-confirm');
+    const btnCancel = document.getElementById('confirm-modal-cancel');
+
+    msgEl.textContent = message;
+    modal.style.display = 'flex';
+
+    function cleanup() {
+        modal.style.display = 'none';
+        btnConfirm.removeEventListener('click', confirmHandler);
+        btnCancel.removeEventListener('click', cancelHandler);
+    }
+
+    function confirmHandler() {
+        cleanup();
+        onConfirm();
+    }
+    function cancelHandler() { cleanup(); }
+
+    btnConfirm.addEventListener('click', confirmHandler);
+    btnCancel.addEventListener('click', cancelHandler);
+}
+
+function showInfoModal(message, onClose) {
+    const modal = document.getElementById('confirm-modal');
+    const errorAlert = document.getElementById('error-alert');
+    if (!modal) {
+        // Si no hay modal, mostrar en el banner de errores como fallback (sin native alert)
+        if (errorAlert) {
+            const list = document.getElementById('error-list');
+            list.innerHTML = '<li>' + message + '</li>';
+            errorAlert.classList.add('show');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        if (typeof onClose === 'function') onClose();
+        return;
+    }
+
+    const msgEl = document.getElementById('confirm-modal-message');
+    const btnConfirm = document.getElementById('confirm-modal-confirm');
+    const btnCancel = document.getElementById('confirm-modal-cancel');
+
+    msgEl.textContent = message;
+    // Ocultar cancel para info
+    btnCancel.style.display = 'none';
+    btnConfirm.textContent = 'Aceptar';
+    modal.style.display = 'flex';
+
+    function cleanup() {
+        modal.style.display = 'none';
+        btnCancel.style.display = '';
+        btnConfirm.textContent = 'Confirmar';
+        btnConfirm.removeEventListener('click', confirmHandler);
+    }
+
+    function confirmHandler() { cleanup(); if (typeof onClose === 'function') onClose(); }
+    btnConfirm.addEventListener('click', confirmHandler);
 }
 
 // RENUMERAR FILAS DE CATEGORÍA
@@ -297,3 +360,44 @@ document.getElementById('cotizacion-form').addEventListener('submit', function(e
     document.getElementById('items_data').value = JSON.stringify(items);
     console.log('Items a enviar:', items);
 });
+
+// Reconstruir la UI de categorías/filas a partir del hidden `items_data`
+function rebuildItemsFromHidden() {
+    const itemsJson = document.getElementById('items_data').value || '[]';
+    let items = [];
+    try { items = JSON.parse(itemsJson); } catch (e) { items = []; }
+
+    const container = document.getElementById('categorias-container');
+    if (!container) return;
+
+    // Limpiar contenedor
+    container.innerHTML = '';
+    categoryCounter = 0;
+    itemCounter = 0;
+
+    if (!items || items.length === 0) {
+        addCategory();
+        return;
+    }
+
+    // Agrupar por categoría
+    const itemsByCategory = {};
+    items.forEach(item => {
+        const cat = item.categoria || 'Servicios';
+        if (!itemsByCategory[cat]) itemsByCategory[cat] = [];
+        itemsByCategory[cat].push(item);
+    });
+
+    Object.keys(itemsByCategory).forEach(catName => {
+        const cid = addCategory();
+        const wrapper = document.querySelector(`[data-category-id="${cid}"]`);
+        if (!wrapper) return;
+        const nameInput = wrapper.querySelector('.category-name-input');
+        if (nameInput) nameInput.value = catName;
+        const tbody = wrapper.querySelector('.category-body');
+        tbody.innerHTML = '';
+        itemsByCategory[catName].forEach(it => addRowToCategory(cid, it));
+    });
+
+    calculateGrandTotal();
+}

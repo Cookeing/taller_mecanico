@@ -53,6 +53,15 @@ body {
   margin: 0;
   padding-left: 20px;
 }
+
+/* Modal estilos simples y limpios */
+.confirm-modal { position: fixed; top:0; left:0; right:0; bottom:0; z-index:2000; display:flex; align-items:center; justify-content:center; }
+.confirm-modal-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.45); }
+.confirm-modal-box { position:relative; background:var(--color-surface); border-radius:8px; padding:18px; width:420px; max-width:95%; box-shadow:0 8px 24px rgba(0,0,0,0.2); z-index:2; }
+.confirm-modal-body { font-size:14px; color:var(--color-text); }
+.confirm-modal-actions { display:flex; gap:8px; justify-content:flex-end; }
+.btn-cancel { background:#f0f0f0; border:1px solid #ddd; padding:8px 12px; border-radius:6px; cursor:pointer; }
+.btn-confirm { background:var(--color-primary); color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
 </style>
 
 <div class="cotizacion-wrapper">
@@ -153,11 +162,11 @@ body {
           </div>
           <div class="cliente-campo">
             <label>Dirección:</label>
-            <input type="text" name="cliente_direccion" value="{% if cotizacion.cliente %}{{ cotizacion.cliente.direccion }}{% elif servicio and servicio.vehiculo.cliente %}{{ servicio.vehiculo.cliente.direccion }}{% endif %}">
+            <input type="text" name="cliente_direccion" value="{% if cotizacion.cliente %}{{ cotizacion.cliente.direccion|default:'' }}{% elif servicio and servicio.vehiculo.cliente %}{{ servicio.vehiculo.cliente.direccion|default:'' }}{% endif %}">
           </div>
           <div class="cliente-campo">
             <label>Teléfono:</label>
-            <input type="text" name="cliente_telefono" value="{% if cotizacion.cliente %}{{ cotizacion.cliente.telefono }}{% elif servicio and servicio.vehiculo.cliente %}{{ servicio.vehiculo.cliente.telefono }}{% endif %}">
+            <input type="text" name="cliente_telefono" value="{% if cotizacion.cliente %}{{ cotizacion.cliente.telefono|default:'' }}{% elif servicio and servicio.vehiculo.cliente %}{{ servicio.vehiculo.cliente.telefono|default:'' }}{% endif %}">
           </div>
           <div class="cliente-campo">
             <label>Email:</label>
@@ -173,6 +182,20 @@ body {
       <div class="items-section">
         <div id="categorias-container"></div>
         <button type="button" class="btn-add-category" onclick="addCategory()">+ Agregar Nueva Categoría</button>
+      </div>
+
+      <!-- MODAL DE CONFIRMACIÓN/INFO PERSONALIZADO -->
+      <div id="confirm-modal" class="confirm-modal" style="display:none;">
+        <div class="confirm-modal-overlay"></div>
+        <div class="confirm-modal-box">
+          <div class="confirm-modal-body">
+            <p id="confirm-modal-message" style="margin:0; padding:0; font-size:14px; color:var(--color-text);"></p>
+          </div>
+          <div class="confirm-modal-actions" style="margin-top:12px; text-align:right;">
+            <button type="button" id="confirm-modal-cancel" class="btn-cancel">Cancelar</button>
+            <button type="button" id="confirm-modal-confirm" class="btn-confirm">Confirmar</button>
+          </div>
+        </div>
       </div>
       
       <div class="footer-section">
@@ -251,18 +274,18 @@ document.getElementById('logo-input').addEventListener('change', function(e) {
   }
 });
 
-// VALIDACIÓN DEL FORMULARIO
-document.getElementById('cotizacion-form').addEventListener('submit', function(e) {
+// VALIDACIÓN DEL FORMULARIO (cliente) y envío por AJAX para evitar recarga
+document.getElementById('cotizacion-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  
+
   // Limpiar errores anteriores
   document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
   document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
   document.getElementById('error-alert').classList.remove('show');
   document.getElementById('error-list').innerHTML = '';
-  
+
   const errors = [];
-  
+
   // Validar fecha_emision
   const fechaEmision = document.getElementById('fecha_emision');
   if (!fechaEmision.value) {
@@ -270,7 +293,7 @@ document.getElementById('cotizacion-form').addEventListener('submit', function(e
     fechaEmision.classList.add('field-error');
     document.getElementById('error-fecha_emision').textContent = 'Este campo es obligatorio';
   }
-  
+
   // Validar cliente
   const clienteId = document.getElementById('cliente_id');
   const clienteNombre = document.getElementById('cliente_nombre');
@@ -279,21 +302,16 @@ document.getElementById('cotizacion-form').addEventListener('submit', function(e
     clienteNombre.classList.add('field-error');
     document.getElementById('error-cliente').textContent = 'Este campo es obligatorio';
   }
-  
+
   // Validar items (al menos 1)
   const itemsData = document.getElementById('items_data').value;
   let items = [];
-  try {
-    items = JSON.parse(itemsData);
-  } catch(e) {
-    items = [];
-  }
-  
+  try { items = JSON.parse(itemsData); } catch(e) { items = []; }
   if (items.length === 0) {
     errors.push('Debe agregar al menos un ítem a la cotización');
   }
-  
-  // Si hay errores, mostrar y no enviar
+
+  // Si hay errores cliente, mostrar y no enviar
   if (errors.length > 0) {
     const errorList = document.getElementById('error-list');
     errors.forEach(error => {
@@ -302,15 +320,100 @@ document.getElementById('cotizacion-form').addEventListener('submit', function(e
       errorList.appendChild(li);
     });
     document.getElementById('error-alert').classList.add('show');
-    
-    // Scroll al top
     window.scrollTo({ top: 0, behavior: 'smooth' });
     return false;
   }
-  
-  // Si todo OK, enviar el formulario
-  console.log('Formulario válido, enviando...');
-  this.submit();
+
+  // Preparar envío por AJAX usando FormData (incluye archivos)
+  const formEl = this;
+  const formData = new FormData(formEl);
+
+  try {
+    const resp = await fetch(formEl.action || window.location.href, {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: formData,
+      credentials: 'same-origin'
+    });
+
+    if (resp.status === 200 || resp.status === 201) {
+      const data = await resp.json();
+      if (data.success) {
+        // Redirigir si el servidor indica URL
+        if (data.redirect_url) {
+          window.location.href = data.redirect_url;
+          return;
+        }
+        // Mostrar mensaje de éxito temporal usando modal
+        if (typeof showInfoModal === 'function') {
+          showInfoModal('Cotización guardada correctamente.');
+        }
+        return;
+      } else {
+        // Mostrar errores genéricos
+        document.getElementById('error-list').innerHTML = '';
+        const li = document.createElement('li');
+        li.textContent = 'Error en el servidor. Revise los campos.';
+        document.getElementById('error-list').appendChild(li);
+        document.getElementById('error-alert').classList.add('show');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+    } else if (resp.status === 400) {
+      // Errores de validación: esperar JSON con {errors: {...}, items_data: '...'}
+      const data = await resp.json();
+      // Mostrar lista de errores
+      document.getElementById('error-list').innerHTML = '';
+      if (data.errors) {
+        // data.errors puede ser un objeto con listas
+        for (const [field, messages] of Object.entries(data.errors)) {
+          // Mapear al input si existe
+          const input = document.querySelector('[name="' + field + '"]') || document.getElementById(field);
+          if (input) {
+            input.classList.add('field-error');
+            const errorEl = document.getElementById('error-' + field);
+            if (errorEl) errorEl.textContent = Array.isArray(messages) ? messages.join(' ') : messages;
+          }
+          const li = document.createElement('li');
+          li.textContent = Array.isArray(messages) ? messages.join(' ') : messages;
+          document.getElementById('error-list').appendChild(li);
+        }
+      }
+
+      // Si el servidor devolvió items_data, actualizar el hidden y dejar que el JS reconstruya
+      if (data.items_data) {
+        try { 
+          document.getElementById('items_data').value = data.items_data;
+          // Reconstruir la UI desde el hidden
+          if (typeof rebuildItemsFromHidden === 'function') rebuildItemsFromHidden();
+        } catch(e) {}
+      }
+
+      document.getElementById('error-alert').classList.add('show');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    } else {
+      // Otros errores
+      const text = await resp.text();
+      if (typeof showInfoModal === 'function') {
+        showInfoModal('Error inesperado: ' + resp.status + '\n' + text);
+      } else {
+        // fallback: mostrar en la alerta superior
+        document.getElementById('error-list').innerHTML = '<li>Error inesperado: ' + resp.status + '</li>';
+        document.getElementById('error-alert').classList.add('show');
+      }
+    }
+  } catch (err) {
+    console.error('Error enviando formulario:', err);
+    if (typeof showInfoModal === 'function') {
+      showInfoModal('No se pudo conectar con el servidor. Revise la consola.');
+    } else {
+      document.getElementById('error-list').innerHTML = '<li>No se pudo conectar con el servidor.</li>';
+      document.getElementById('error-alert').classList.add('show');
+    }
+  }
 });
 </script>
 {% endblock %}

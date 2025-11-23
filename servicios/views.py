@@ -155,6 +155,7 @@ def documentos_servicio(request, servicio_id):
         "documentos": documentos,
         "cotizaciones": cotizaciones,
         "form": form,
+        "default_from_email": getattr(__import__('django.conf').conf.settings, 'DEFAULT_FROM_EMAIL', '') or '',
     })
 
 

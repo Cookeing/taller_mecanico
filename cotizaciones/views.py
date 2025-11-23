@@ -2,6 +2,7 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
+from django.urls import reverse
 from django.views.decorators.http import require_GET
 from django.utils import timezone
 from datetime import timedelta
@@ -13,6 +14,7 @@ from django.conf import settings
 from servicios.models import Servicio
 from .models import Cotizacion, ItemCotizacion
 from .forms import CotizacionForm
+from django.db import transaction
 from clientes.models import Cliente
 from .utils import generar_pdf_cotizacion
 from django.views.decorators.csrf import csrf_exempt
@@ -37,8 +39,15 @@ def RegistrarCotizacion(request):
         if not form.is_valid():
             print("FORM ERRORS (cotizacion):", form.errors)
             messages.error(request, "Error al registrar la cotización. Por favor revise los campos marcados.")
-            
-            # Pasar fechas para rellenar
+            # Si es una petición AJAX responder con JSON y errores
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                errors = {k: [str(m) for m in v] for k, v in form.errors.items()}
+                return JsonResponse({
+                    'success': False,
+                    'errors': errors,
+                    'items_data': request.POST.get('items_data', '[]')
+                }, status=400)
+            # Pasar fechas para rellenar en render normal
             return render(request, "cotizaciones/cotizacion_form.html", {
                 "form": form,
                 "clientes": Cliente.objects.all(),
@@ -94,8 +103,16 @@ def RegistrarCotizacion(request):
                 precio_unitario=item_data.get('precio_unitario', 0)
             )
         
-        messages.success(request, "Cotización registrada exitosamente.")    
-        return redirect("cotizaciones:listar_cotizaciones")
+        messages.success(request, "Cotización registrada exitosamente.")
+        # Redirect dependiendo si existe servicio asociado
+        if servicio:
+            service_url = reverse('servicios:documentos_servicio', args=[servicio.id])
+        else:
+            service_url = reverse('cotizaciones:listar_cotizaciones')
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'redirect_url': service_url})
+        return redirect(service_url)
     
     else:
         # GET: Pre-cargar datos
@@ -141,6 +158,7 @@ def historial_cotizaciones(request):
     paginator = Paginator(cotizaciones, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+    default_from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', '') or ''
 
     return render(request, 'cotizaciones/cotizacion_list.html', {
         'cotizaciones': page_obj,
@@ -148,6 +166,7 @@ def historial_cotizaciones(request):
         'is_paginated': paginator.num_pages > 1,
         'cotizaciones_aprobadas': cotizaciones_aprobadas,
         'cotizaciones_pendientes': cotizaciones_pendientes,
+        'default_from_email': default_from_email,
     })
 
 
@@ -180,6 +199,14 @@ def EditarCotizacion(request, pk):
         if not form.is_valid():
             print("FORM ERRORS (editar):", form.errors)
             messages.error(request, 'Error al actualizar la cotización. Por favor revise los campos.')
+            # Responder con JSON si es AJAX para evitar recarga
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                errors = {k: [str(m) for m in v] for k, v in form.errors.items()}
+                return JsonResponse({
+                    'success': False,
+                    'errors': errors,
+                    'items_data': request.POST.get('items_data', '[]')
+                }, status=400)
             return render(request, 'cotizaciones/cotizacion_form.html', {
                 'form': form,
                 'cotizacion': cotizacion,
@@ -190,12 +217,14 @@ def EditarCotizacion(request, pk):
                 "validez": (timezone.now() + timedelta(days=30)).date(),
             })
         
-        cotizacion = form.save(commit=False)
-        
-        # ✅ Reasignar servicio si viene vacío del formulario
-        if not cotizacion.servicio:
-            cotizacion.servicio = servicio
-        
+        # Forzar que el cleaned_data tenga el servicio actual (evita desvincular)
+        if servicio:
+            try:
+                form.cleaned_data['servicio'] = servicio
+            except Exception:
+                pass
+
+        # Preparar items_data y validar JSON antes de la transacción
         items_data_json = request.POST.get('items_data', '[]')
         try:
             items_data = json.loads(items_data_json)
@@ -211,34 +240,68 @@ def EditarCotizacion(request, pk):
                 "today": timezone.now().date(),
                 "validez": (timezone.now() + timedelta(days=30)).date(),
             })
-        
-        # Eliminar items existentes
-        cotizacion.items.all().delete()
-        
-        # Crear nuevos items
-        subtotal = 0
-        for item_data in items_data:
-            cantidad = float(item_data.get('cantidad', 0))
-            precio_unitario = float(item_data.get('precio_unitario', 0))
-            subtotal += (cantidad * precio_unitario)
-            
-            ItemCotizacion.objects.create(
-                cotizacion=cotizacion,
-                categoria=item_data.get('categoria', 'Servicios'),
-                descripcion=item_data.get('descripcion', ''),
-                cantidad=cantidad,
-                precio_unitario=precio_unitario
-            )
-        
-        cotizacion.subtotal = subtotal
-        cotizacion.save()
-        # AGREGADO: Actualizar total del servicio
-        if cotizacion.servicio:
-            cotizacion.servicio.actualizar_total()
+
+        print(f"[DEBUG] EditarCotizacion - servicio original id: {getattr(servicio, 'id', None)}")
+
+        # Guardar cambios y items dentro de una transacción para evitar estados intermedios
+        try:
+            with transaction.atomic():
+                cotizacion = form.save(commit=False)
+                # Asegurar preservación de la relación con el servicio original
+                if servicio:
+                    cotizacion.servicio = servicio
+
+                # Eliminar items existentes
+                cotizacion.items.all().delete()
+
+                # Crear nuevos items
+                subtotal = 0
+                for item_data in items_data:
+                    cantidad = float(item_data.get('cantidad', 0))
+                    precio_unitario = float(item_data.get('precio_unitario', 0))
+                    subtotal += (cantidad * precio_unitario)
+                    ItemCotizacion.objects.create(
+                        cotizacion=cotizacion,
+                        categoria=item_data.get('categoria', 'Servicios'),
+                        descripcion=item_data.get('descripcion', ''),
+                        cantidad=cantidad,
+                        precio_unitario=precio_unitario
+                    )
+
+                cotizacion.subtotal = subtotal
+                cotizacion.save()
+                # Actualizar total del servicio
+                if cotizacion.servicio:
+                    cotizacion.servicio.actualizar_total()
+        except Exception as e:
+            # En caso de error no dejar la cotización en un estado inconsistente
+            print(f"[ERROR] Falló actualización de cotización {getattr(cotizacion, 'id', 'n/a')}: {e}")
+            messages.error(request, 'Error interno al actualizar la cotización.')
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'errors': {'__all__': ['Error interno.']}, 'items_data': items_data_json}, status=500)
+            return render(request, 'cotizaciones/cotizacion_form.html', {
+                'form': form,
+                'cotizacion': cotizacion,
+                'items': items,
+                'is_edit': True,
+                'servicio': servicio,
+                "today": timezone.now().date(),
+                "validez": (timezone.now() + timedelta(days=30)).date(),
+            })
+
+        print(f"[DEBUG] EditarCotizacion - servicio guardado id: {getattr(cotizacion.servicio, 'id', None)}")
 
         
         messages.success(request, 'Cotización actualizada exitosamente.')
-        return redirect('cotizaciones:listar_cotizaciones')
+        # Redirigir al servicio si existe, si no a la lista general
+        if servicio:
+            service_url = reverse('servicios:documentos_servicio', args=[servicio.id])
+        else:
+            service_url = reverse('cotizaciones:listar_cotizaciones')
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'redirect_url': service_url})
+        return redirect(service_url)
     
     else:
         form = CotizacionForm(instance=cotizacion)
@@ -317,6 +380,14 @@ def EliminarCotizacion(request, pk):
             servicio.actualizar_total()  # <<< AÑADIR ESTA LÍNEA
 
         messages.success(request, f"Cotización {numero_cotizacion} eliminada exitosamente.")
+        # Redirigir de vuelta a la página del servicio si la eliminación provino del servicio
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            if servicio:
+                return JsonResponse({'success': True, 'redirect_url': reverse('servicios:documentos_servicio', args=[servicio.id])})
+            return JsonResponse({'success': True, 'redirect_url': reverse('cotizaciones:listar_cotizaciones')})
+
+        if servicio:
+            return redirect('servicios:documentos_servicio', servicio.id)
         return redirect("cotizaciones:listar_cotizaciones")
     
     return redirect("cotizaciones:listar_cotizaciones")
@@ -325,8 +396,8 @@ def EliminarCotizacion(request, pk):
 
 def VerPDF(request, pk):
     cotizacion = get_object_or_404(Cotizacion, pk=pk)
-    messages.info(request, "Funcionalidad de PDF en desarrollo.")
-    return redirect("cotizaciones:editar_cotizacion", pk=pk)
+    # Redirigir a la vista que genera/dispone el PDF real
+    return redirect('cotizaciones:descargar_pdf', cotizacion.id)
 
 
 def descargar_pdf_cotizacion(request, cotizacion_id):
@@ -350,48 +421,47 @@ def enviar_cotizacion_email(request, cotizacion_id):
         Cotizacion.objects.select_related('cliente', 'servicio__vehiculo').prefetch_related('items'),
         id=cotizacion_id
     )
-    
-    if not cotizacion.cliente or not cotizacion.cliente.email:
-        messages.error(request, "El cliente no tiene un email registrado.")
+    # Permitir que el usuario indique un email destino vía POST (campo 'to_email')
+    to_email = None
+    if request.method == 'POST':
+        to_email = request.POST.get('to_email') or request.POST.get('email')
+
+    destino = to_email or (cotizacion.cliente.email if cotizacion.cliente and cotizacion.cliente.email else None)
+    if not destino:
+        messages.error(request, "No hay email destino disponible para enviar la cotización.")
         return redirect('cotizaciones:listar_cotizaciones')
-    
+
     try:
         buffer = generar_pdf_cotizacion(cotizacion)
-        
+
         html_content = render_to_string('cotizaciones/email_cotizacion.html', {
             'cotizacion': cotizacion,
         })
-        
+
         asunto = f"Cotización N° {cotizacion.numero_cotizacion} - {cotizacion.empresa_nombre or 'Taller Mecánico'}"
-        
+
         email = EmailMessage(
             subject=asunto,
             body=html_content,
             from_email=settings.DEFAULT_FROM_EMAIL or settings.EMAIL_HOST_USER,
-            to=[cotizacion.cliente.email],
+            to=[destino],
         )
-        
+
         email.content_subtype = "html"
-        
+
         email.attach(
             f'cotizacion_{cotizacion.numero_cotizacion}.pdf',
             buffer.getvalue(),
             'application/pdf'
         )
-        
+
         email.send(fail_silently=False)
-        
-        messages.success(
-            request, 
-            f"Cotización enviada exitosamente a {cotizacion.cliente.email}"
-        )
-        
+
+        messages.success(request, f"Cotización enviada exitosamente a {destino}")
+
     except Exception as e:
-        messages.error(
-            request, 
-            f"Error al enviar el email: {str(e)}"
-        )
-    
+        messages.error(request, f"Error al enviar el email: {str(e)}")
+
     return redirect('cotizaciones:listar_cotizaciones')
 
 @csrf_exempt

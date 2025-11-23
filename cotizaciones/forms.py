@@ -5,6 +5,24 @@ from .models import Cotizacion, ItemCotizacion
 
 class CotizacionForm(forms.ModelForm):
     """Formulario para crear y editar cotizaciones"""
+    # Aceptar varios formatos al validar fechas (p. ej. DD/MM/YYYY enviado desde la UI)
+    fecha_emision = forms.DateField(
+        required=True,
+        input_formats=['%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%Y/%m/%d', '%d.%m.%Y'],
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date'
+        })
+    )
+
+    fecha_validez = forms.DateField(
+        required=False,
+        input_formats=['%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%Y/%m/%d', '%d.%m.%Y'],
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date'
+        })
+    )
     
     class Meta:
         model = Cotizacion

@@ -103,6 +103,10 @@
                 <div class="btn-group btn-group-sm">
                   <a href="{% url 'cotizaciones:descargar_pdf' cot.id %}" class="btn btn-outline-primary" title="PDF" target="_blank"><i class="bi bi-file-pdf"></i></a>
                   <a href="{% url 'cotizaciones:editar_cotizacion' cot.id %}" class="btn btn-outline-warning" title="Editar"><i class="bi bi-pencil"></i></a>
+                  <button type="button" class="btn btn-outline-warning btn-open-email-modal" title="Enviar por email"
+                          data-cot-id="{{ cot.id }}" data-default-email="{{ cot.cliente.email|default:default_from_email }}">
+                    <i class="bi bi-envelope"></i>
+                  </button>
                   <a href="{% url 'cotizaciones:duplicar_cotizacion' cot.id %}" class="btn btn-outline-info" title="Duplicar"><i class="bi bi-files"></i></a>
                   <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ cot.id }}"><i class="bi bi-trash"></i></button>
                 </div>
@@ -210,3 +214,72 @@
 
 </div>
 {% endblock %}
+
+  {% block extra_js %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Email modal handling (robust)
+      const emailInput = document.getElementById('emailDestinoInput');
+      const emailForm = document.getElementById('emailEnviarForm');
+
+      document.querySelectorAll('.btn-open-email-modal').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const cotId = this.dataset.cotId;
+          const defaultEmail = this.dataset.defaultEmail || '{{ default_from_email }}' || '';
+          if (emailForm) {
+            const baseAction = "{% url 'cotizaciones:enviar_email' 0 %}";
+            emailForm.action = baseAction.replace('/0/', `/${cotId}/`);
+          }
+
+          if (typeof bootstrap !== 'undefined' && document.getElementById('emailCotModal')) {
+            const emailModalEl = document.getElementById('emailCotModal');
+            let modalInstance = bootstrap.Modal.getInstance(emailModalEl);
+            if (!modalInstance) modalInstance = new bootstrap.Modal(emailModalEl);
+            if (emailInput) emailInput.value = defaultEmail;
+            modalInstance.show();
+          } else {
+            const entrada = window.prompt('Email destinatario:', defaultEmail || '');
+            if (entrada && emailForm) {
+              let hidden = emailForm.querySelector('input[name="to_email"]');
+              if (!hidden) {
+                hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'to_email';
+                emailForm.appendChild(hidden);
+              }
+              hidden.value = entrada;
+              emailForm.submit();
+            }
+          }
+        });
+      });
+    });
+  </script>
+
+  <!-- Modal para enviar email editable (compartido) -->
+  <div class="modal fade" id="emailCotModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="bi bi-envelope"></i> Enviar cotización por email</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="emailEnviarForm" method="post" action="">
+          {% csrf_token %}
+          <div class="modal-body">
+            <div class="mb-2">
+              <label for="emailDestinoInput" class="form-label">Email destinatario</label>
+              <input type="email" id="emailDestinoInput" name="to_email" class="form-control" required placeholder="destino@ejemplo.com">
+              <div class="form-text">Por defecto aparece el email del cliente; puede modificarlo.</div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Enviar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {% endblock %}
