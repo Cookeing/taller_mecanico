@@ -182,19 +182,22 @@ def generar_pdf_cotizacion(cotizacion):
     elements.append(cliente_content_table)
     elements.append(Spacer(1, 20))
     
-    # ========== ITEMS POR CATEGORÍA ==========
-    items = cotizacion.items.all().order_by('categoria', 'id')
+    # ========== ITEMS POR CATEGORÍA (ORDEN CORREGIDO) ==========
+    # CAMBIO CRÍTICO: Ordenar solo por 'id' para respetar el orden de inserción
+    items = cotizacion.items.all().order_by('id')
     
     if items.exists():
-        # Agrupar por categoría
-        categorias = {}
+        # Agrupar por categoría MANTENIENDO EL ORDEN de aparición
+        from collections import OrderedDict
+        categorias = OrderedDict()
+        
         for item in items:
             cat = item.categoria or 'Sin categoría'
             if cat not in categorias:
                 categorias[cat] = []
             categorias[cat].append(item)
         
-        # Crear tabla por cada categoría
+        # Crear tabla por cada categoría EN EL ORDEN QUE APARECEN
         for categoria, items_cat in categorias.items():
             # Encabezado de categoría
             cat_header_para = Paragraph(
