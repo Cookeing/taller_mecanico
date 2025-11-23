@@ -157,7 +157,8 @@
               </button>
             {% endif %}
             {% if cot.cliente and cot.cliente.telefono %}
-              <a href="https://wa.me/{{ cot.cliente.telefono|phone_whatsapp }}?text={{ cot.get_mensaje_whatsapp|urlencode }}"
+              {% url 'cotizaciones:descargar_pdf' cot.id as pdf_path %}
+              <a href="https://wa.me/{{ cot.cliente.telefono|phone_whatsapp }}?text={{ ("Hola "|add:cot.cliente.nombre|add:", te enviamos tu cotización N°"|add:cot.numero_cotizacion|add:" del "|add:cot.fecha_emision|date:"d/m/Y"|add:" por un total de $")|add:cot.monto_total|floatformat:0|add:". Ver documento: "|add:request.scheme|add:"://"|add:request.get_host|add:pdf_path|urlencode }}"
                 class="btn btn-sm btn-outline-success mb-1"
                 target="_blank"
                 title="Enviar por WhatsApp">
