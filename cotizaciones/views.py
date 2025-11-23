@@ -192,6 +192,10 @@ def EditarCotizacion(request, pk):
         
         cotizacion = form.save(commit=False)
         
+        # ✅ Reasignar servicio si viene vacío del formulario
+        if not cotizacion.servicio:
+            cotizacion.servicio = servicio
+        
         items_data_json = request.POST.get('items_data', '[]')
         try:
             items_data = json.loads(items_data_json)
