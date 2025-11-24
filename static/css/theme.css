@@ -904,12 +904,13 @@ html[data-theme="dark"] .sidebar-item.active {
 .main-content.expanded {
   margin-left: 0;
   width: 100%;
+  padding-left: 80px; /* Espacio para el botón del sidebar */
 }
 
 .sidebar-toggle-btn {
   position: fixed;
   top: var(--space-20);
-  left: 300px; /* Fuera del sidebar */
+  left: 210px; /* Justo al borde derecho del sidebar */
   width: 48px;
   height: 48px;
   border-radius: var(--radius-full);
