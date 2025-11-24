@@ -181,17 +181,32 @@
       <!-- Formulario -->
       <form method="POST" enctype="multipart/form-data" class="row g-2 mb-4 bg-light p-3 rounded">
         {% csrf_token %}
-        <div class="col-md-3">{{ form.tipo_documento }}</div>
-        <div class="col-md-3">{{ form.fecha_documento }}</div>
-        <div class="col-md-3">{{ form.monto }}</div>
-        <div class="col-md-3">
-          <div class="d-flex align-items-center">
-            <label for="{{ form.archivo.id_for_label }}" class="btn btn-sm btn-outline-primary me-2" style="white-space:nowrap;">
-              <i class="bi bi-upload me-1"></i> Seleccionar archivo
-            </label>
-            {{ form.archivo }}
-            <span id="documento-file-name" class="small text-muted">No hay archivo seleccionado</span>
-          </div>
+        <div class="col-md-4">
+          {{ form.tipo_documento }}
+          {% if form.tipo_documento.errors %}
+            {% for error in form.tipo_documento.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          {% endif %}
+        </div>
+        <div class="col-md-4">
+          {{ form.fecha_documento }}
+          {% if form.fecha_documento.errors %}
+            {% for error in form.fecha_documento.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          {% endif %}
+        </div>
+        <div class="col-md-4">
+          {{ form.monto }}
+          {% if form.monto.errors %}
+            {% for error in form.monto.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          {% endif %}
+        </div>
+        <div class="col-12">
+          {{ form.archivo }}
           {% if form.archivo.errors %}
             {% for error in form.archivo.errors %}
               <div class="text-danger small">{{ error }}</div>
@@ -312,24 +327,7 @@
       });
     });
   </script>
-  <script>
-    // Mostrar nombre de archivo seleccionado junto al botón
-    document.addEventListener('DOMContentLoaded', function() {
-      var fileInput = document.getElementById('{{ form.archivo.id_for_label }}');
-      var fileNameSpan = document.getElementById('documento-file-name');
-      if (!fileInput || !fileNameSpan) return;
-      // Hide the native file control and keep label as trigger
-      try { fileInput.classList.add('d-none'); fileInput.setAttribute('aria-hidden','true'); } catch(e) {}
-      fileInput.addEventListener('change', function(e) {
-        var f = fileInput.files && fileInput.files[0];
-        if (f) {
-          fileNameSpan.textContent = f.name;
-        } else {
-          fileNameSpan.textContent = 'No hay archivo seleccionado';
-        }
-      });
-    });
-  </script>
+
 
   <!-- Modal para enviar email editable (compartido) -->
   <div class="modal fade" id="emailCotModal" tabindex="-1">

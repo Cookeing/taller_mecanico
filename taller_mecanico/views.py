@@ -16,9 +16,9 @@ def home(request):
     from servicios.models import Servicio
     from cotizaciones.models import Cotizacion
     
-    # Estadísticas generales
-    total_clientes = Cliente.objects.count()
-    total_vehiculos = Vehiculo.objects.count()
+    # Estadísticas generales (solo registros activos)
+    total_clientes = Cliente.objects.filter(activo=True).count()
+    total_vehiculos = Vehiculo.objects.filter(activo=True).count()
     servicios_activos = Servicio.objects.filter(
         estado__in=['pendiente', 'proceso']
     ).count()

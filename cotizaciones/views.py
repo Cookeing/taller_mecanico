@@ -35,9 +35,7 @@ def RegistrarCotizacion(request):
     if request.method == "POST":
         form = CotizacionForm(request.POST, request.FILES)
         
-        # DEBUG: Mostrar errores del formulario
         if not form.is_valid():
-            print("FORM ERRORS (cotizacion):", form.errors)
             messages.error(request, "Error al registrar la cotización. Por favor revise los campos marcados.")
             # Si es una petición AJAX responder con JSON y errores
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -197,7 +195,6 @@ def EditarCotizacion(request, pk):
         form = CotizacionForm(request.POST, request.FILES, instance=cotizacion)
         
         if not form.is_valid():
-            print("FORM ERRORS (editar):", form.errors)
             messages.error(request, 'Error al actualizar la cotización. Por favor revise los campos.')
             # Responder con JSON si es AJAX para evitar recarga
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -241,8 +238,6 @@ def EditarCotizacion(request, pk):
                 "validez": (timezone.now() + timedelta(days=30)).date(),
             })
 
-        print(f"[DEBUG] EditarCotizacion - servicio original id: {getattr(servicio, 'id', None)}")
-
         # Guardar cambios y items dentro de una transacción para evitar estados intermedios
         try:
             with transaction.atomic():
@@ -275,7 +270,6 @@ def EditarCotizacion(request, pk):
                     cotizacion.servicio.actualizar_total()
         except Exception as e:
             # En caso de error no dejar la cotización en un estado inconsistente
-            print(f"[ERROR] Falló actualización de cotización {getattr(cotizacion, 'id', 'n/a')}: {e}")
             messages.error(request, 'Error interno al actualizar la cotización.')
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'errors': {'__all__': ['Error interno.']}, 'items_data': items_data_json}, status=500)
@@ -289,9 +283,6 @@ def EditarCotizacion(request, pk):
                 "validez": (timezone.now() + timedelta(days=30)).date(),
             })
 
-        print(f"[DEBUG] EditarCotizacion - servicio guardado id: {getattr(cotizacion.servicio, 'id', None)}")
-
-        
         messages.success(request, 'Cotización actualizada exitosamente.')
         # Redirigir al servicio si existe, si no a la lista general
         if servicio:

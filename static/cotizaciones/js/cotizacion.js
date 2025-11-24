@@ -5,8 +5,6 @@ let itemCounter = 0;
 
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('JavaScript de cotización cargado');
-    
     // Intentar cargar items precargados si existen
     loadPreloadedItems();
     
@@ -23,16 +21,13 @@ document.addEventListener('DOMContentLoaded', function() {
 function loadPreloadedItems() {
     const itemsDataElement = document.getElementById('items-data-json');
     if (!itemsDataElement) {
-        console.log('No hay datos precargados');
         return;
     }
     
     try {
         const itemsData = JSON.parse(itemsDataElement.textContent);
-        console.log('Items precargados:', itemsData);
         
         if (!itemsData || itemsData.length === 0) {
-            console.log('Array de items vacío');
             return;
         }
         
@@ -83,7 +78,6 @@ function addCategory() {
     const container = document.getElementById('categorias-container');
     
     if (!container) {
-        console.error('No se encontró el contenedor de categorías');
         return null;
     }
     
@@ -136,7 +130,6 @@ function addRowToCategory(categoryId, itemData = null) {
     const categoryWrapper = document.querySelector(`[data-category-id="${categoryId}"]`);
     
     if (!categoryWrapper) {
-        console.error('No se encontró la categoría', categoryId);
         return;
     }
     
@@ -205,8 +198,7 @@ function deleteCategory(button) {
 function showConfirmModal(message, onConfirm) {
     const modal = document.getElementById('confirm-modal');
     if (!modal) {
-        // Si el modal no existe, registrar y ejecutar acción para mantener compatibilidad
-        console.warn('Confirm modal no encontrado en DOM — ejecutando acción por defecto');
+        // Si el modal no existe, ejecutar acción para mantener compatibilidad
         onConfirm();
         return;
     }
@@ -358,7 +350,6 @@ document.getElementById('cotizacion-form').addEventListener('submit', function(e
     });
     
     document.getElementById('items_data').value = JSON.stringify(items);
-    console.log('Items a enviar:', items);
 });
 
 // Reconstruir la UI de categorías/filas a partir del hidden `items_data`

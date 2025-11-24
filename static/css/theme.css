@@ -898,36 +898,60 @@ html[data-theme="dark"] .sidebar-item.active {
   background: var(--bg-primary);
   min-height: 100vh;
   padding: var(--space-24);
+  padding-top: 90px; /* Espacio para el botón de toggle */
   transition: margin-left 0.3s ease, width 0.3s ease;
 }
 
 .main-content.expanded {
   margin-left: 0;
   width: 100%;
+  padding-top: 90px; /* Mantener el espacio cuando está expandido */
 }
 
 .sidebar-toggle-btn {
   position: fixed;
-  top: var(--space-20);
-  left: 300px; /* Fuera del sidebar */
-  width: 48px;
-  height: 48px;
+  top: var(--space-24); /* Alineado con el logo */
+  left: 200px; /* Al lado derecho del texto "Taller Admin" */
+  width: 36px;
+  height: 36px;
   border-radius: var(--radius-full);
-  background: var(--color-primary);
-  border: none;
-  color: var(--color-btn-primary-text);
+  background: rgba(var(--color-teal-500-rgb), 0.2);
+  border: 1px solid rgba(var(--color-teal-500-rgb), 0.4);
+  color: var(--color-primary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 101; /* Mayor que el sidebar */
+  z-index: 101; /* Mayor que el sidebar (100) */
   transition: all 0.3s ease;
-  box-shadow: var(--shadow-lg);
-  font-size: 1.5rem;
+  font-size: 1.25rem;
+}
+
+.sidebar-toggle-btn:hover {
+  background: rgba(var(--color-teal-500-rgb), 0.3);
 }
 
 .main-content.expanded .sidebar-toggle-btn {
-  left: var(--space-20); /* Cuando el sidebar está oculto */
+  left: var(--space-20); /* Esquina superior izquierda cuando está cerrado */
+  top: var(--space-20);
+  background: var(--color-primary);
+  color: var(--color-btn-primary-text);
+  box-shadow: var(--shadow-lg);
+}
+
+.main-content.expanded .sidebar-toggle-btn:hover {
+  background: var(--color-primary-hover);
+  transform: scale(1.08);
+}
+
+.sidebar-toggle-btn:hover {
+  transform: scale(1.08);
+  background: var(--color-primary-hover);
+}
+
+.sidebar-toggle-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring), var(--shadow-lg);
 }
 
 .sidebar-toggle-btn:hover {

@@ -154,5 +154,3 @@ class VehiculoSearch {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = VehiculoSearch;
 }
-
-console.log("✅ VehiculoSearch cargado correctamente");

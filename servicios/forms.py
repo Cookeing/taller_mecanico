@@ -61,6 +61,35 @@ class DocumentoForm(forms.ModelForm):
         # If editing an existing documento, show its date in dd/mm/YYYY
         if self.instance and getattr(self.instance, 'fecha_documento', None):
             self.initial['fecha_documento'] = self.instance.fecha_documento.strftime('%d/%m/%Y')
+        
+        # Hacer monto obligatorio
+        self.fields['monto'].required = True
+        self.fields['archivo'].required = True
+    
+    def clean_monto(self):
+        monto = self.cleaned_data.get('monto')
+        if monto is not None and monto <= 0:
+            raise forms.ValidationError('El monto debe ser mayor a cero.')
+        return monto
+    
+    def clean_archivo(self):
+        archivo = self.cleaned_data.get('archivo')
+        if archivo:
+            # Extensiones permitidas para documentos
+            extensiones_validas = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt']
+            nombre = archivo.name.lower()
+            
+            if not any(nombre.endswith(ext) for ext in extensiones_validas):
+                raise forms.ValidationError(
+                    'Solo se permiten archivos PDF, Word, Excel o texto. '
+                    f'Extensiones válidas: {", ".join(extensiones_validas)}'
+                )
+            
+            # Límite de tamaño: 10MB
+            if archivo.size > 10 * 1024 * 1024:
+                raise forms.ValidationError('El archivo no debe superar los 10 MB.')
+        
+        return archivo
 
 
 class FotoServicioForm(forms.Form):

@@ -12,9 +12,7 @@ urlpatterns = [
     
     # Documentos
     path('<int:servicio_id>/documentos/', v.documentos_servicio, name='documentos_servicio'),
-    path('<int:servicio_id>/documentos/nuevo/', v.documento_upload, name='documento_upload'),
     path('documentos/<int:pk>/eliminar/', v.documento_delete, name='documento_delete'),
-    path('<int:servicio_id>/documentos/', v.documentos_servicio, name='documentos_servicio'),
 
     
     # Fotos

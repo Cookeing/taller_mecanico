@@ -95,6 +95,18 @@
       </button>
       
       <main class="container-fluid py-4">
+        <!-- Mensajes de Django -->
+        {% if messages %}
+          <div class="messages-container mb-3">
+            {% for message in messages %}
+              <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+        
         {% block content %}{% endblock %}
       </main>
     </div>
@@ -127,8 +139,6 @@
           html.setAttribute("data-theme", newTheme);
           localStorage.setItem("theme", newTheme);
           updateThemeIcon(newTheme);
-
-          console.log("Tema cambiado a:", newTheme);
         });
 
         function updateThemeIcon(theme) {

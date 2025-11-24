@@ -146,7 +146,8 @@ def documentos_servicio(request, servicio_id):
 
             messages.success(request, "Documento subido con éxito.")
             return redirect("servicios:documentos_servicio", servicio_id=servicio.id)
-
+        else:
+            messages.error(request, "❌ Por favor corrige los errores del formulario.")
     else:
         form = DocumentoForm()
 
@@ -157,23 +158,6 @@ def documentos_servicio(request, servicio_id):
         "form": form,
         "default_from_email": getattr(__import__('django.conf').conf.settings, 'DEFAULT_FROM_EMAIL', '') or '',
     })
-
-
-def documento_upload(request, servicio_id):
-    servicio = get_object_or_404(Servicio, pk=servicio_id)
-    if request.method == "POST":
-        form = DocumentoForm(request.POST, request.FILES)
-        if form.is_valid():
-            doc = form.save(commit=False)
-            doc.servicio = servicio
-            doc.save()
-
-            # 🚨 Agrega esto:
-            servicio.actualizar_total()
-
-            messages.success(request, "Documento subido con éxito.")
-    return redirect("servicios:documentos_servicio", servicio_id=servicio.id)
-
 
 
 def documento_delete(request, pk):
@@ -227,9 +211,27 @@ def fotos_servicio(request, servicio_id):
             imagenes = request.FILES.getlist('imagenes')
             descripcion = form.cleaned_data.get('descripcion', '')
             
+            # Validar que haya al menos una imagen
+            if not imagenes:
+                messages.error(request, "❌ Debes seleccionar al menos una imagen.")
+                return redirect('servicios:fotos_servicio', servicio_id=servicio.id)
+            
             fotos_guardadas = 0
             for imagen in imagenes:
                 try:
+                    # Validar extensión de imagen
+                    extensiones_validas = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+                    nombre_lower = imagen.name.lower()
+                    
+                    if not any(nombre_lower.endswith(ext) for ext in extensiones_validas):
+                        messages.error(request, f"❌ {imagen.name}: Solo se permiten imágenes JPG, PNG, GIF o WebP.")
+                        continue
+                    
+                    # Validar tamaño (máximo 5MB por imagen)
+                    if imagen.size > 5 * 1024 * 1024:
+                        messages.error(request, f"❌ {imagen.name}: La imagen no debe superar los 5 MB.")
+                        continue
+                    
                     # Optimizar imagen
                     imagen_optimizada = optimizar_imagen(imagen)
                     
