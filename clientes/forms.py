@@ -39,13 +39,13 @@ class ClienteForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Hacer todos los campos obligatorios
+        # Solo nombre es obligatorio
         self.fields['nombre'].required = True
-        self.fields['rut'].required = True
-        self.fields['telefono'].required = True
-        self.fields['direccion'].required = True
-        self.fields['email'].required = True
-        self.fields['contacto'].required = True
+        self.fields['rut'].required = False
+        self.fields['telefono'].required = False
+        self.fields['direccion'].required = False
+        self.fields['email'].required = False
+        self.fields['contacto'].required = False
 
     def clean(self):
         cleaned_data = super().clean()

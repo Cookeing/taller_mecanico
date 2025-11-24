@@ -21,15 +21,15 @@ class VehiculoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Hacer todos los campos obligatorios
+        # Solo cliente y patente son obligatorios
         self.fields['cliente'].required = True
         self.fields['patente'].required = True
-        self.fields['marca'].required = True
-        self.fields['modelo'].required = True
-        self.fields['anio'].required = True
-        self.fields['chasis'].required = True
-        self.fields['motor'].required = True
-        self.fields['kilometraje'].required = True
+        self.fields['marca'].required = False
+        self.fields['modelo'].required = False
+        self.fields['anio'].required = False
+        self.fields['chasis'].required = False
+        self.fields['motor'].required = False
+        self.fields['kilometraje'].required = False
         
         # Filtrar solo clientes activos
         from clientes.models import Cliente
