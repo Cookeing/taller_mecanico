@@ -680,7 +680,7 @@ select.form-control {
 }
 
 /* END PERPLEXITY DESIGN SYSTEM */
-```css
+
 /* COTIZACION.CSS - Design System Compliant */
 
 * {
@@ -1345,4 +1345,3 @@ body {
         width: calc(100% - var(--space-8));
     }
 }
-```
