@@ -1,131 +1,181 @@
-<a name="readme-top"></a>
+<img src="https://img.shields.io/github/stars/Cookeing/taller_mecanico?style=for-the-badge" />
+<img src="https://img.shields.io/github/forks/Cookeing/taller_mecanico?style=for-the-badge" />
+<img src="https://img.shields.io/github/issues/Cookeing/taller_mecanico?style=for-the-badge" />
+<img src="https://img.shields.io/github/license/Cookeing/taller_mecanico?style=for-the-badge" />
+  # MECÁNICA EN LÍNEA – Sistema de Gestión de Taller
 
-<!-- PROJECT SHIELDS -->
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stars][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
-
-<!-- PROJECT LOGO -->
-<br />
-<div align="center">
-  <!-- Puedes reemplazar este enlace con un logo real si lo tienes -->
+Plataforma web para la administración de talleres mecánicos pequeños, diseñada para centralizar la gestión de clientes, vehículos y cotizaciones en una única aplicación accesible desde cualquier dispositivo.
   <a href="https://github.com/Cookeing/taller_mecanico">
-    <img src="media/image2.png" alt="Logo" width="160" height="auto">
+    <img src="static/img/logo.png" alt="Logo" width="200" height="auto">
   </a>
-
-  <h1 align="center">MECÁNICA EN LÍNEA - GESTIÓN DE TALLER</h1>
-  <p align="center">
-    Plataforma web integral para la administración de talleres mecánicos.
-    <br />
-    <a href="https://github.com/Cookeing/taller_mecanico"><strong>Explora la documentación »</strong></a>
-    <br />
-    <br />
-    <a href="https://github.com/Cookeing/taller_mecanico/issues">Reportar un Error</a>
-    ·
-    <a href="https://github.com/Cookeing/taller_mecanico/issues">Solicitar una Característica</a>
-  </p>
-</div>
-
-<!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Tabla de Contenidos</summary>
-  <ol>
-    <li><a href="#descripción-general">Descripción General</a></li>
-    <li><a href="#alcance-del-proyecto">Alcance del Proyecto</a></li>
-    <li><a href="#arquitectura">Arquitectura</a></li>
-    <li><a href="#construido-con">Construido Con</a></li>
-    <li><a href="#primeros-pasos">Primeros Pasos</a>
-      <ul>
-        <li><a href="#requisitos-previos">Requisitos Previos</a></li>
-        <li><a href="#instalación">Instalación</a></li>
-        <li><a href="#ejecución-en-desarrollo">Ejecución en desarrollo</a></li>
-      </ul>
-    </li>
-    <li><a href="#estructura-del-proyecto">Estructura del Proyecto</a></li>
-    <li><a href="#hoja-de-ruta-y-product-backlog">Hoja de Ruta y Product Backlog</a></li>
-    <li><a href="#integraciones">Integraciones</a></li>
-    <li><a href="#licencia">Licencia</a></li>
-    <li><a href="#contacto">Contacto</a></li>
-  </ol>
-</details>
-
-<!-- ABOUT THE PROJECT -->
+---
 
 ## Descripción General
 
-[![Product Name Screen Shot][product-screenshot]](media/image14.png)
+Este proyecto surge de la necesidad real de digitalizar la gestión de un taller mecánico, reemplazando el manejo manual de información (papeles, conversaciones de WhatsApp, registros dispersos) por una plataforma web organizada.
 
-Este repositorio contiene el código fuente del **Sistema de Gestión para Taller Mecánico**, una solución digital creada para resolver los problemas de organización y desorden documental de talleres pequeños. El sistema nace de la necesidad real de un mecánico (Cristian Maldonado) de centralizar la información de clientes, vehículos y documentos en un solo lugar, accesible desde su teléfono móvil.
+El sistema permite:
 
-El objetivo principal es **reemplazar el manejo manual con papeles y conversaciones de WhatsApp** por una plataforma web organizada, rápida e intuitiva. La aplicación permite gestionar clientes, registrar vehículos por patente, generar y enviar cotizaciones en PDF, adjuntar boletas/facturas y consultar el historial completo de servicios de manera simple.
+- Registrar clientes
+- Asociar vehículos mediante patente
+- Generar cotizaciones en PDF
+- Adjuntar documentos e imágenes
+- Consultar el historial completo de servicios
 
-<p align="right">(<a href="#readme-top">volver arriba</a>)</p>
+El objetivo es mejorar la organización del taller y facilitar el acceso a la información desde dispositivos móviles o computadoras.
 
-## Alcance del proyecto
+---
 
-**Incluye:**
+## Funcionalidades
 
--   Registro y gestión de clientes con datos clave (nombre, RUT, teléfono).
--   Registro de vehículos únicos asociados a clientes mediante la patente.
--   Generación y almacenamiento de cotizaciones en formato PDF.
--   Adjuntar boletas, facturas y fotografías de servicios como evidencia.
--   Historial de servicios por vehículo en formato de tabla simple.
--   Búsqueda rápida por nombre de cliente o patente del vehículo.
--   Diseño responsivo para su uso en PC y dispositivos móviles.
+### Incluye
 
-**No incluye (en esta versión):**
+- Registro de clientes (nombre, RUT, teléfono)
+- Registro de vehículos asociados a clientes
+- Generación automática de cotizaciones en PDF
+- Historial de servicios por vehículo
+- Adjuntar boletas, facturas o imágenes
+- Búsqueda rápida por cliente o patente
+- Interfaz responsiva compatible con móviles
 
--   Gestión de inventario de repuestos.
--   Reportes gráficos o analíticos avanzados.
--   Control de múltiples usuarios (es de usuario único).
--   Integración con sistemas contables externos.
-
-<p align="right">(<a href="#readme-top">volver arriba</a>)</p>
+---
 
 ## Arquitectura
 
-El proyecto sigue una **arquitectura de tres capas (presentación, lógica de negocio y datos)** bajo el patrón **Modelo-Vista-Template (MVT)** de Django, lo que garantiza una clara separación de responsabilidades y facilita el mantenimiento.
+La aplicación sigue una arquitectura de tres capas basada en el patrón **MVT (Modelo-Vista-Template)**.
 
--   **Backend:** Desarrollado con Python y Django, expone la lógica de negocio y la interacción con la base de datos.
--   **Base de Datos:** Se utiliza **Supabase** (PostgreSQL) como servicio en la nube para garantizar accesibilidad y escalabilidad. Alberga toda la información estructurada (clientes, vehículos, etc.).
--   **Almacenamiento de Archivos:** **Supabase Storage** se encarga de guardar de forma segura todos los archivos adjuntos (PDFs de cotizaciones, imágenes de facturas y fotos de servicios).
--   **Frontend:** Utiliza plantillas HTML, potenciadas con JavaScript para una experiencia de usuario dinámica y búsquedas en tiempo real, todo servido por Django.
--   **Comunicación:** La aplicación está diseñada para integrarse con servicios externos como la **API de WhatsApp** y **EmailJS** para el envío directo de documentos a los clientes.
+**Backend**
 
-<p align="right">(<a href="#readme-top">volver arriba</a>)</p>
+Desarrollado con Python utilizando el framework  
+:contentReference[oaicite:1]{index=1}  
+que gestiona la lógica de negocio y la interacción con la base de datos.
+<img src="https://skillicons.dev/icons?i=python,django,postgres,html,css,js,bootstrap" />
 
-## Construido Con
+**Base de datos**
 
-Este proyecto utiliza las siguientes tecnologías y servicios:
+Se utiliza  
+:contentReference[oaicite:2]{index=2}  
+a través de  
+:contentReference[oaicite:3]{index=3}  
+para almacenar la información estructurada del sistema.
 
-*   [![Python][python-shield]][python-url]
-*   [![Django][django-shield]][django-url]
-*   [![Supabase][supabase-shield]][supabase-url]
-*   [![PostgreSQL][postgres-shield]][postgres-url]
-*   [![HTML5][html-shield]][html-url]
-*   [![CSS3][css-shield]][css-url]
-*   [![JavaScript][javascript-shield]][javascript-url]
-*   [![Bootstrap][bootstrap-shield]][bootstrap-url]
+**Almacenamiento de archivos**
 
-<p align="right">(<a href="#readme-top">volver arriba</a>)</p>
+Supabase Storage se utiliza para guardar:
 
-<!-- GETTING STARTED -->
+- PDFs de cotizaciones
+- Facturas
+- Imágenes de servicios
 
-## Primeros Pasos
+**Frontend**
 
-Sigue estos pasos para tener una copia local del proyecto en funcionamiento.
+La interfaz utiliza:
 
-### Requisitos previos
+- HTML
+- CSS
+- JavaScript
+- Bootstrap
 
-Asegúrate de tener instalado Python (versión 3.8 o superior) y pip.
+servidos directamente desde Django mediante plantillas.
 
--   **Python:** [Descargar desde python.org](https://www.python.org/)
--   **pip:** Generalmente se instala automáticamente con Python.
+---
 
-### Instalación
+## Tecnologías utilizadas
 
-1.  Clona el repositorio:
-    ```sh
-    git clone https://github.com/Cookeing/taller_mecanico.git
+- Python
+- Django
+- PostgreSQL
+- Supabase
+- HTML5
+- CSS3
+- JavaScript
+- Bootstrap
+- ReportLab (generación de PDFs)
+
+---
+
+## Estructura del proyecto
+
+```
+taller_mecanico/
+│
+├── clientes/
+├── vehiculos/
+├── cotizaciones/
+│
+├── templates/
+├── static/
+├── media/
+│
+├── manage.py
+└── requirements.txt
+```
+
+---
+
+## Instalación
+
+Clonar el repositorio:
+
+```
+git clone https://github.com/Cookeing/taller_mecanico.git
+```
+
+Entrar al proyecto:
+
+```
+cd taller_mecanico
+```
+
+Instalar dependencias:
+
+```
+pip install -r requirements.txt
+```
+
+---
+
+## Ejecución en desarrollo
+
+```
+python manage.py runserver
+```
+
+La aplicación estará disponible en:
+
+```
+http://127.0.0.1:8000/
+```
+
+---
+
+## Funcionalidad de cotizaciones
+
+El sistema permite registrar cotizaciones asociadas a clientes y vehículos.
+
+Cada cotización incluye:
+
+- Número de cotización
+- Fecha
+- Descripción del servicio
+- Monto estimado
+- Estado
+- Cliente asociado
+- Vehículo asociado
+
+Las cotizaciones pueden exportarse automáticamente a **PDF** para su envío al cliente.
+
+---
+
+## Posibles integraciones futuras
+
+- API de WhatsApp para envío automático de cotizaciones
+- Integración con email
+- Sistema multiusuario
+- Gestión de inventario de repuestos
+
+---
+
+## Licencia
+
+Este proyecto se distribuye bajo la licencia MIT.
